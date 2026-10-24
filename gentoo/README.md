@@ -62,7 +62,10 @@ compete for the same command name.
 `0.4.1-r2` is pinned to commit `8e7459713539cbd6520a39db325b74aa1afd8b3e` (the
 commit that carries the cross-desktop work) rather than the upstream `v0.4.1`
 tag, so it builds exactly the code in this repository. Revision `-r2` adds the
-`pkg_postinst` notice about the AT-SPI 2.60 keyboard monitor. Revision `-r1`
+`pkg_postinst` notice about the AT-SPI 2.60 keyboard monitor; it does **not**
+change the installed code — the pinned commit is the same, so the typing-log
+fixes only reach a `0.4.1-r2` install when `MY_COMMIT` moves to a commit that
+carries them (use `9999` from a local checkout meanwhile). Revision `-r1`
 added `x11-libs/libXScrnSaver`: `mochi/x11_idle.py` loads `libXss` through
 ctypes, and
 `libX11` does not provide it, so X11 sessions without it lose idle detection
