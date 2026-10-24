@@ -16,6 +16,7 @@ dependencies = []
 mochi = "mochi_launcher:main"
 mochi-update = "mochi.update_cli:main"
 mochi-agent-signal = "mochi.agent_signal:main"
+mochi-emote-catalogue = "mochi.shortcut_signal:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

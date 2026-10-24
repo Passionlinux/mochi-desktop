@@ -1103,6 +1103,10 @@ class EmoteCatalogueMixin:
         super()._set_bond_state_for_ui(state)
         self._refresh_emote_catalogue()
 
+    def show_emote_catalogue(self) -> None:
+        """Open the read-only emote catalogue (used by the desktop CLI shortcut)."""
+        self._show_emote_catalogue()
+
     def _show_emote_catalogue(self) -> None:
         if self._preview_mode:
             return

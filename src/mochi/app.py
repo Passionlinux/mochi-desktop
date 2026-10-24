@@ -21,6 +21,7 @@ from mochi.x11 import request_keep_above
 
 
 AGENT_EVENT_ACTION = "agent-event"
+EMOTE_CATALOGUE_ACTION = "emote-catalogue"
 
 
 def signal_update_ready(path: Path) -> None:
@@ -64,6 +65,12 @@ class MochiApplication(Gtk.Application):
             )
             agent_action.connect("activate", self._on_agent_event_action)
             self.add_action(agent_action)
+            # Exposes the emote catalogue to any desktop that can run a command
+            # on a keybinding (KDE, XFCE, MATE, Cinnamon) through the same
+            # org.gtk.Actions interface the agent action already uses.
+            emote_action = Gio.SimpleAction.new(EMOTE_CATALOGUE_ACTION, None)
+            emote_action.connect("activate", self._on_emote_catalogue_action)
+            self.add_action(emote_action)
 
     def _on_agent_event_action(self, _action, parameter) -> None:
         """Forward a validated coding-agent lifecycle event to the buddy."""
@@ -76,6 +83,12 @@ class MochiApplication(Gtk.Application):
         buddy = self._buddy
         if buddy is not None:
             buddy.receive_agent_event(event, token)
+
+    def _on_emote_catalogue_action(self, _action, _parameter) -> None:
+        """Open the emote catalogue on request from a desktop shortcut."""
+        buddy = self._buddy
+        if buddy is not None:
+            buddy.show_emote_catalogue()
 
     def do_activate(self) -> None:
         existing = self.get_active_window()
