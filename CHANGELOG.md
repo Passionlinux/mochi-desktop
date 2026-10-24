@@ -30,6 +30,13 @@ Mochi is still in early public alpha, so behavior, configuration, and compatibil
   running Mochi. Bind it to a keyboard shortcut in KDE Plasma, XFCE, MATE or
   Cinnamon to replace the GNOME-only `Ctrl + Alt + E`.
 
+- Gentoo users can now install Mochi as a regular package. A local Portage
+  overlay lives in [`gentoo/`](gentoo/README.md) and provides
+  `x11-misc/mochi-desktop` as a pinned `0.4.1` and a live `9999` ebuild. It
+  builds the same source tree, ships the file/context features unchanged, and
+  turns the bundled self-updater off by default because Portage owns updates on
+  a system-wide install.
+
 ### Changed
 
 - On Wayland, Mochi now uses its XWayland window on every desktop whose

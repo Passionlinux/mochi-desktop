@@ -283,6 +283,14 @@ log out and back in once so GNOME can load it. If the helper was skipped,
 Mochi still runs without it, but some contextual reactions and global
 shortcuts will be unavailable.
 
+### Install on Gentoo
+
+A local Portage overlay lives in [`gentoo/`](gentoo/README.md) and installs
+`x11-misc/mochi-desktop` system-wide, as a pinned `0.4.1` build or the live
+`9999` build that follows `main`. It builds the same source tree and leaves the
+file/context features untouched; the bundled self-updater is off by default
+because Portage owns updates on a system package.
+
 ### Update an installed copy
 
 Installed Mochi can now check for updates without touching the source checkout
