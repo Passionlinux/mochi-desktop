@@ -11,6 +11,7 @@ import sys
 from collections.abc import MutableMapping
 from pathlib import Path
 
+from mochi import desktop_env
 from mochi.config import ConfigStore
 
 
@@ -37,19 +38,23 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def configure_display_backend(environment: MutableMapping[str, str]) -> bool:
-    """Use XWayland for the pet on GNOME, following Codex's Linux approach."""
-    desktop = environment.get("XDG_CURRENT_DESKTOP", "").casefold()
-    is_gnome_wayland = (
-        environment.get("XDG_SESSION_TYPE", "").casefold() == "wayland"
-        and "gnome" in desktop
-        and bool(environment.get("DISPLAY"))
-    )
-    if not is_gnome_wayland or environment.get("MOCHI_NATIVE_WAYLAND") == "1":
+    """Use XWayland for the buddy window where the compositor lacks layer shell.
+
+    Mutter and KWin do not expose ``wlr-layer-shell``, so on those (and other
+    non-wlroots) Wayland sessions this small standalone buddy needs the
+    XWayland path to stay freely movable, sticky and positionable. wlroots
+    compositors keep their native layer-shell surface, and
+    ``MOCHI_NATIVE_WAYLAND=1`` opts out everywhere.
+    """
+    if environment.get("MOCHI_NATIVE_WAYLAND") == "1":
+        return False
+    if desktop_env.session_type(environment) != "wayland":
+        return False
+    if not desktop_env.has_display(environment):
+        return False
+    if desktop_env.uses_wlroots(environment):
         return False
 
-    # Mutter does not expose layer shell. XWayland gives this small standalone
-    # buddy the transparent, freely movable window path used by Codex's pet,
-    # while the rest of the desktop remains native Wayland.
     environment["GDK_BACKEND"] = "x11"
     return True
 
@@ -82,7 +87,8 @@ def main(argv: list[str] | None = None) -> int:
         )
     if selected_xwayland:
         logging.getLogger(__name__).info(
-            "GNOME Wayland detected; using XWayland for the buddy window"
+            "Wayland without layer-shell support detected; using XWayland "
+            "for the buddy window"
         )
 
     config = ConfigStore()
