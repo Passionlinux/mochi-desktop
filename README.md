@@ -435,6 +435,12 @@ expose itself to AT-SPI. GTK terminals such as `xfce4-terminal` and
 Known issues). `mochi --debug` logs which typing backend was selected and why
 the others were rejected.
 
+On KDE Plasma the portable keyboard monitor needs
+`app-accessibility/at-spi2-core` **2.60 or newer**. With 2.58 only caret
+activity is left, which most applications do not publish, so typing reactions
+stay silent there. Mochi says so once in the log instead of claiming the GNOME
+helper is enabled.
+
 ### Opening the Emote Catalogue without GNOME
 
 `Ctrl + Alt + E` is delivered by the GNOME helper. On other desktops, bind a

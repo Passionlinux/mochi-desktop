@@ -53,6 +53,13 @@ Mochi is still in early public alpha, so behavior, configuration, and compatibil
 
 ### Fixed
 
+- Typing reactions off GNOME no longer claim to be enabled when they cannot
+  fire. Mochi logged "enabled via the GNOME Shell typing pulse extension" as
+  soon as it started watching the helper's D-Bus name, even with no helper
+  installed, and the AT-SPI fallback then failed silently. It now reports the
+  backend that actually delivers activity, and names the
+  `at-spi2-core >= 2.60` requirement once when only caret activity is left.
+
 - The speech bubble no longer occasionally renders as black-and-white stripes
   on KDE Plasma. The bubble is a transparent window, and Mochi was repositioning
   it about 45 times a second even when it had not moved, then relying on partial

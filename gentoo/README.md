@@ -13,7 +13,7 @@ gentoo/
 ├── profiles/repo_name                    # mochi-desktop
 ├── profiles/categories                   # x11-misc
 └── x11-misc/mochi-desktop/
-    ├── mochi-desktop-0.4.1-r1.ebuild     # pinned commit, immutable tarball
+    ├── mochi-desktop-0.4.1-r2.ebuild     # pinned commit, immutable tarball
     ├── mochi-desktop-9999.ebuild         # live, tracks the fork's main branch
     ├── Manifest
     ├── metadata.xml
@@ -56,20 +56,22 @@ compete for the same command name.
 
 | ebuild | source | rebuilds when |
 | --- | --- | --- |
-| `0.4.1-r1` | `github.com/Passionlinux/mochi-desktop/archive/<commit>.tar.gz` | you bump `MY_COMMIT` and refresh `Manifest` |
+| `0.4.1-r2` | `github.com/Passionlinux/mochi-desktop/archive/<commit>.tar.gz` | you bump `MY_COMMIT` and refresh `Manifest` |
 | `9999` | `github.com/Passionlinux/mochi-desktop.git#main`, or `MOCHI_GIT_REPO` for a local checkout | always (live) |
 
-`0.4.1-r1` is pinned to commit `8e7459713539cbd6520a39db325b74aa1afd8b3e` (the
+`0.4.1-r2` is pinned to commit `8e7459713539cbd6520a39db325b74aa1afd8b3e` (the
 commit that carries the cross-desktop work) rather than the upstream `v0.4.1`
-tag, so it builds exactly the code in this repository. Revision `-r1` adds
-`x11-libs/libXScrnSaver`: `mochi/x11_idle.py` loads `libXss` through ctypes, and
+tag, so it builds exactly the code in this repository. Revision `-r2` adds the
+`pkg_postinst` notice about the AT-SPI 2.60 keyboard monitor. Revision `-r1`
+added `x11-libs/libXScrnSaver`: `mochi/x11_idle.py` loads `libXss` through
+ctypes, and
 `libX11` does not provide it, so X11 sessions without it lose idle detection
 silently. Bumping it:
 
 ```sh
-# edit MY_COMMIT in mochi-desktop-0.4.1-r1.ebuild, then
+# edit MY_COMMIT in mochi-desktop-0.4.1-r2.ebuild, then
 cd gentoo/x11-misc/mochi-desktop
-ebuild mochi-desktop-0.4.1-r1.ebuild manifest   # or: pkgdev manifest x11-misc/mochi-desktop
+ebuild mochi-desktop-0.4.1-r2.ebuild manifest   # or: pkgdev manifest x11-misc/mochi-desktop
 ```
 
 ## Testing local changes with emerge
@@ -122,7 +124,7 @@ Two gotchas, both hit while testing this:
 Back to the pinned build:
 
 ```sh
-sudo emerge -av --oneshot =x11-misc/mochi-desktop-0.4.1-r1
+sudo emerge -av --oneshot =x11-misc/mochi-desktop-0.4.1-r2
 ```
 
 ## Published overlay
@@ -179,7 +181,7 @@ Pulled in by the ebuild, all from the main tree:
 | --- | --- |
 | `dev-python/pygobject:3`, `dev-python/pycairo` | `gi` bindings and Cairo |
 | `gui-libs/gtk:4`, `dev-libs/glib:2` | GTK4 / GLib / Gio |
-| `app-accessibility/at-spi2-core:2` | AT-SPI typing monitor off GNOME |
+| `app-accessibility/at-spi2-core:2` | AT-SPI typing monitor off GNOME; the keyboard monitor needs >= 2.60, older versions leave caret activity only |
 | `x11-base/xwayland`, `x11-libs/libX11` | XWayland window and the X11 pointer/window probes |
 | `x11-libs/libXScrnSaver` | `libXss`, the XScreenSaver idle counter used on X11 sessions |
 | `gui-libs/gtk4-layer-shell:0` | native Wayland surface on wlroots compositors (optional at runtime) |

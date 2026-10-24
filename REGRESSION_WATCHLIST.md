@@ -242,6 +242,10 @@ publishes an AT-SPI tree. GTK terminals do; Konsole (Qt) does not, even with
 `QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1`, so missing typing reactions there are
 expected rather than a regression.
 
+The portable keyboard monitor needs `at-spi2-core` 2.60 or newer. With 2.58 the
+debug log names the requirement once and reports caret-only coverage; it must
+not claim the GNOME helper is enabled when no helper owns its D-Bus name.
+
 Automated coverage: `python -m pytest tests/test_desktop_env.py
 tests/test_presence_activity.py tests/test_typing_activity.py tests/test_main.py
 tests/test_shortcut_signal.py`.
