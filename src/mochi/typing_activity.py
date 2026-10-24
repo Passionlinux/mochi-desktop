@@ -263,7 +263,10 @@ class AtspiDeviceActivityBackend:
             else getattr(capability_type, "KEYBOARD_MONITOR", None)
         )
         set_capabilities = getattr(device, "set_capabilities", None)
-        if keyboard_monitor is None or set_capabilities is None:
+        if keyboard_monitor is None:
+            self.last_error = "AT-SPI keyboard monitor needs at-spi2-core >= 2.60"
+            return False
+        if set_capabilities is None:
             self.last_error = "keyboard-monitor capability API is unavailable"
             return False
 
@@ -427,6 +430,8 @@ class TypingActivityMonitor:
         self._glib = None
         self._stop_source_id: int | None = None
         self._unavailable_logged = False
+        self._atspi_version_blocked = False
+        self._version_hint_logged = False
 
     @property
     def available(self) -> bool:
@@ -444,6 +449,8 @@ class TypingActivityMonitor:
         """Start the first configured safe anonymous-activity backend."""
         if self._backend is not None:
             return True
+
+        self._atspi_version_blocked = False
 
         if self._glib is None:
             try:
@@ -495,6 +502,7 @@ class TypingActivityMonitor:
                             break
                     except Exception:
                         pass
+                    self._note_atspi_version_block(fallback)
                     try:
                         fallback.stop()
                     except Exception:
@@ -525,6 +533,7 @@ class TypingActivityMonitor:
                     "activity only (limited coverage)"
                 )
                 self._log_accessibility_coverage_hint()
+                self._log_atspi_version_hint()
                 return
             self._logger.info(
                 "Typing mirror: GNOME helper absent; using %s", fallback.name
@@ -629,6 +638,22 @@ class TypingActivityMonitor:
             self._on_typing_stopped()
 
         return getattr(self._glib, "SOURCE_REMOVE", False)
+
+    def _note_atspi_version_block(self, backend: TypingActivityBackend) -> None:
+        """Remember that the device backend failed only for lack of AT-SPI 2.60."""
+        reason = getattr(backend, "last_error", None)
+        if reason and "at-spi2-core >= 2.60" in reason:
+            self._atspi_version_blocked = True
+
+    def _log_atspi_version_hint(self) -> None:
+        """Name the AT-SPI requirement once, when only caret activity is left."""
+        if not self._atspi_version_blocked or self._version_hint_logged:
+            return
+        self._version_hint_logged = True
+        self._logger.info(
+            "Typing mirror: AT-SPI keyboard monitor needs at-spi2-core >= 2.60; "
+            "caret activity only until it is available"
+        )
 
     def _log_unavailable_once(self) -> None:
         if self._unavailable_logged:

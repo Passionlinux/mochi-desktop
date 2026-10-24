@@ -339,6 +339,32 @@ class TypingSelectionLoggingTests(unittest.TestCase):
         self.assertNotIn("enabled via", self._joined())
         self.assertEqual(self.hints, 0)
 
+    def test_missing_atspi_capability_names_the_version_once(self) -> None:
+        monitor = self._monitor(
+            _StubGnomeBackend(False),
+            _FakeBackend(
+                "AT-SPI DeviceA11yManager keyboard activity",
+                available=False,
+                error="AT-SPI keyboard monitor needs at-spi2-core >= 2.60",
+            ),
+            _StubCaretBackend(),
+        )
+
+        self.assertTrue(monitor.start())
+        self.assertEqual(self._joined().count("at-spi2-core >= 2.60"), 1)
+
+        monitor._log_selected_backend(monitor._backend)
+        self.assertEqual(self._joined().count("at-spi2-core >= 2.60"), 1)
+
+    def test_armed_device_backend_has_no_version_hint(self) -> None:
+        monitor = self._monitor(
+            _StubGnomeBackend(False),
+            _FakeBackend("AT-SPI DeviceA11yManager keyboard activity"),
+        )
+
+        self.assertTrue(monitor.start())
+        self.assertNotIn("at-spi2-core >= 2.60", self._joined())
+
 
 class GnomeShellTypingPulseBackendTests(unittest.TestCase):
     class _Variant:
@@ -548,7 +574,8 @@ class DeviceCapabilityTests(unittest.TestCase):
 
         self.assertFalse(backend._enable_keyboard_monitor(device, atspi))
         self.assertEqual(
-            backend.last_error, "keyboard-monitor capability API is unavailable"
+            backend.last_error,
+            "AT-SPI keyboard monitor needs at-spi2-core >= 2.60",
         )
 
 
