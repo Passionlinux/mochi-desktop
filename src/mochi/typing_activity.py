@@ -397,12 +397,16 @@ class TypingActivityMonitor:
         self._detector = detector or TypingBurstDetector()
         # Prefer the tiny GNOME Shell companion extension for broad activity.
         # It sends a zero-argument D-Bus Pulse and never transports key data.
-        # AT-SPI caret activity remains a limited fallback when the extension is
-        # not installed or enabled. Broad text-changed events are disabled in
-        # the runtime fallback because Mochi's own animated speech labels can
-        # otherwise generate a self-sustaining feedback loop.
+        # AT-SPI's device manager is the portable fallback on other desktops
+        # (KDE, XFCE, MATE, Cinnamon) when their accessibility bus exposes the
+        # keyboard-monitor capability; it too discards every key payload.
+        # AT-SPI caret activity remains the last, limited fallback when neither
+        # is available. Broad text-changed events are disabled in the runtime
+        # fallback because Mochi's own animated speech labels can otherwise
+        # generate a self-sustaining feedback loop.
         self._backends = tuple(backends) if backends is not None else (
             GnomeShellTypingPulseBackend(),
+            AtspiDeviceActivityBackend(),
             AtspiTextActivityBackend(allow_text_changed=False),
         )
         self._logger = logger or logging.getLogger(__name__)

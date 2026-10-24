@@ -197,14 +197,30 @@ class TypingActivityMonitorTests(unittest.TestCase):
         self.assertEqual(preferred.start_calls, 1)
         self.assertEqual(fallback.start_calls, 0)
 
-    def test_default_runtime_prefers_shell_pulse_then_text_fallback(self) -> None:
+    def test_default_runtime_prefers_shell_then_device_then_text(self) -> None:
         monitor = TypingActivityMonitor(
             on_typing_activity=lambda: None,
             on_typing_stopped=lambda: None,
         )
-        self.assertEqual(len(monitor._backends), 2)
+        self.assertEqual(len(monitor._backends), 3)
         self.assertIsInstance(monitor._backends[0], GnomeShellTypingPulseBackend)
-        self.assertIsInstance(monitor._backends[1], AtspiTextActivityBackend)
+        self.assertIsInstance(monitor._backends[1], AtspiDeviceActivityBackend)
+        self.assertIsInstance(monitor._backends[2], AtspiTextActivityBackend)
+
+    def test_off_gnome_selects_device_backend_before_text_fallback(self) -> None:
+        shell = _FakeBackend("shell", available=False, error="no helper")
+        device = _FakeBackend("device", available=True)
+        text = _FakeBackend("text", available=True)
+        monitor = TypingActivityMonitor(
+            on_typing_activity=lambda: None,
+            on_typing_stopped=lambda: None,
+            backends=[shell, device, text],
+        )
+        monitor._glib = _FakeGLib()
+        self.assertTrue(monitor.start())
+        self.assertEqual(monitor.backend_name, "device")
+        self.assertEqual(device.start_calls, 1)
+        self.assertEqual(text.start_calls, 0)
 
     def test_failed_preferred_backend_falls_back(self) -> None:
         preferred = _FakeBackend("device", available=False, error="unavailable")
