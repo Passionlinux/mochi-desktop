@@ -42,6 +42,7 @@ RDEPEND="
 	media-libs/gstreamer:1.0
 	x11-base/xwayland
 	x11-libs/libX11
+	x11-libs/libXScrnSaver
 	gnome? ( gnome-base/gnome-shell:0 )
 "
 DEPEND="${RDEPEND}"

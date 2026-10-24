@@ -103,7 +103,8 @@ Pulled in by the ebuild, all from the main tree:
 | `dev-python/pygobject:3`, `dev-python/pycairo` | `gi` bindings and Cairo |
 | `gui-libs/gtk:4`, `dev-libs/glib:2` | GTK4 / GLib / Gio |
 | `app-accessibility/at-spi2-core:2` | AT-SPI typing monitor off GNOME |
-| `x11-base/xwayland`, `x11-libs/libX11` | XWayland window and the X11 idle/pointer probes |
+| `x11-base/xwayland`, `x11-libs/libX11` | XWayland window and the X11 pointer/window probes |
+| `x11-libs/libXScrnSaver` | `libXss`, the XScreenSaver idle counter used on X11 sessions |
 | `gui-libs/gtk4-layer-shell:0` | native Wayland surface on wlroots compositors (optional at runtime) |
 | `media-libs/gstreamer:1.0` + base/good plugins | sound cues and the focus ambience loop (falls back to `pw-play`/`paplay`) |
 | `gnome-base/gnome-shell:0` | only with `USE=gnome` |
