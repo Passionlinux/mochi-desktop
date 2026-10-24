@@ -12,7 +12,7 @@
 set -eu
 
 dry_run=false
-overlay=${MOCHI_OVERLAY_DIR:-$HOME/Projets/passionlinux/passiongnulinux-overlay}
+overlay=${MOCHI_OVERLAY_DIR:-$HOME/Projets/IA/passiongnulinux-overlay}
 
 for arg in "$@"; do
 	case $arg in

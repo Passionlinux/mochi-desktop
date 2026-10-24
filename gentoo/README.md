@@ -144,9 +144,9 @@ To publish the current tree:
 ```
 
 The script mirrors `x11-misc/mochi-desktop` into a checkout of the overlay
-(`~/Projets/passionlinux/passiongnulinux-overlay` by default, or
-`MOCHI_OVERLAY_DIR`), commits with the mochi commit it came from, and pushes. It
-is a no-op when the two already match.
+(`~/Projets/IA/passiongnulinux-overlay` by default, or `MOCHI_OVERLAY_DIR`),
+commits with the mochi commit it came from, and pushes. It is a no-op when the
+two already match.
 
 `/var/db/repos/passiongnulinux-overlay` is Portage's own root-owned copy and is
 not updated by that script. Refresh it after publishing, as root:
