@@ -500,13 +500,42 @@ class TypingActivityMonitor:
                     except Exception:
                         pass
             self._unavailable_logged = False
-            self._logger.info(
-                "Typing mirror enabled via %s "
-                "(anonymous activity timing only; key content is discarded)",
-                backend.name,
-            )
-            self._log_accessibility_coverage_hint()
+            self._log_selected_backend(backend)
             return True
+
+    def _log_selected_backend(self, backend: TypingActivityBackend) -> None:
+        """Report the backend that can actually deliver anonymous activity.
+
+        The pulse backend stays armed without a helper so that a mid-session
+        extension enable is still picked up, but staying armed is not
+        delivery. When the helper is absent, name the fallback that is really
+        producing events instead of claiming the GNOME backend is enabled.
+        """
+        if (
+            isinstance(backend, GnomeShellTypingPulseBackend)
+            and not backend.helper_present
+        ):
+            fallback = self._fallback
+            if fallback is None:
+                self._log_unavailable_once()
+                return
+            if isinstance(fallback, AtspiTextActivityBackend):
+                self._logger.info(
+                    "Typing mirror: GNOME helper absent; using AT-SPI caret "
+                    "activity only (limited coverage)"
+                )
+                self._log_accessibility_coverage_hint()
+                return
+            self._logger.info(
+                "Typing mirror: GNOME helper absent; using %s", fallback.name
+            )
+            return
+
+        self._logger.info(
+            "Typing mirror enabled via %s "
+            "(anonymous activity timing only; key content is discarded)",
+            backend.name,
+        )
 
         self._log_unavailable_once()
         return False

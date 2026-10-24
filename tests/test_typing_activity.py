@@ -243,6 +243,103 @@ class TypingActivityMonitorTests(unittest.TestCase):
         self.assertFalse(self.monitor.available)
 
 
+class _StubHelper:
+    def __init__(self, active: bool) -> None:
+        self.active = active
+
+    def stop(self) -> None:
+        self.active = False
+
+
+class _StubGnomeBackend(GnomeShellTypingPulseBackend):
+    """Pulse backend whose helper presence is scripted, without D-Bus."""
+
+    def __init__(self, present: bool) -> None:
+        super().__init__()
+        self._present = present
+
+    def start(self, on_activity) -> bool:
+        self._on_activity = on_activity
+        self._helper = _StubHelper(self._present)
+        return True
+
+    @property
+    def helper_present(self) -> bool:
+        return self._present
+
+
+class _StubCaretBackend(AtspiTextActivityBackend):
+    """Caret fallback that arms without touching AT-SPI."""
+
+    def __init__(self) -> None:
+        super().__init__(allow_text_changed=False)
+
+    def start(self, on_activity) -> bool:
+        self._on_activity = on_activity
+        self._listener = object()
+        return True
+
+
+class TypingSelectionLoggingTests(unittest.TestCase):
+    def _monitor(self, *backends):
+        self.logger = _ListLogger()
+        self.hints = 0
+        monitor = TypingActivityMonitor(
+            on_typing_activity=lambda: None,
+            on_typing_stopped=lambda: None,
+            backends=list(backends),
+            logger=self.logger,
+        )
+        monitor._glib = _FakeGLib()
+        monitor._log_accessibility_coverage_hint = self._record_hint
+        return monitor
+
+    def _record_hint(self) -> None:
+        self.hints += 1
+
+    def _joined(self) -> str:
+        return "\n".join(self.logger.messages)
+
+    def test_helper_present_keeps_the_existing_enabled_line(self) -> None:
+        monitor = self._monitor(_StubGnomeBackend(True), _FakeBackend("device"))
+
+        self.assertTrue(monitor.start())
+        self.assertIn("enabled via GNOME Shell typing pulse extension", self._joined())
+        self.assertNotIn("GNOME helper absent", self._joined())
+        self.assertEqual(self.hints, 0)
+
+    def test_absent_helper_reports_the_device_fallback(self) -> None:
+        monitor = self._monitor(
+            _StubGnomeBackend(False),
+            _FakeBackend("AT-SPI DeviceA11yManager keyboard activity"),
+            _FakeBackend("caret"),
+        )
+
+        self.assertTrue(monitor.start())
+        self.assertIn(
+            "GNOME helper absent; using AT-SPI DeviceA11yManager keyboard activity",
+            self._joined(),
+        )
+        self.assertNotIn("enabled via", self._joined())
+        self.assertEqual(self.hints, 0)
+
+    def test_absent_helper_with_only_caret_is_explicit(self) -> None:
+        monitor = self._monitor(_StubGnomeBackend(False), _StubCaretBackend())
+
+        self.assertTrue(monitor.start())
+        self.assertIn("caret activity only (limited coverage)", self._joined())
+        self.assertNotIn("enabled via", self._joined())
+        self.assertEqual(self.hints, 1)
+
+    def test_absent_helper_with_no_fallback_is_reported_unavailable(self) -> None:
+        monitor = self._monitor(_StubGnomeBackend(False))
+
+        self.assertTrue(monitor.start())
+        self.assertIn("Typing mirror unavailable", self._joined())
+        self.assertNotIn("enabled via", self._joined())
+        self.assertEqual(self.hints, 0)
+
+
 class GnomeShellTypingPulseBackendTests(unittest.TestCase):
     class _Variant:
         def __init__(self, _signature, value):
