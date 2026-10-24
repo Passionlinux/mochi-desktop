@@ -14,6 +14,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 from mochi.i18n import tr
+from mochi.presence.bubble_position import RESYNC_INTERVAL_MS, ResyncGate, should_move
 from mochi.x11 import get_window_position, move_window, request_keep_above
 
 
@@ -62,6 +63,11 @@ class SpeechBubble:
         self._typing_step = 0
         self._pending_text: str | None = None
         self._pending_duration_seconds: float | None = None
+
+        # Last position actually applied to the X11 surface. None forces the
+        # next positioning pass to move, which is what a hidden window needs.
+        self._applied_position: tuple[int, int] | None = None
+        self._resync_gate = ResyncGate(interval_seconds=RESYNC_INTERVAL_MS / 1000)
 
         self._label = self._make_label()
         self._bubble_box = self._make_bubble_content(self._label)
@@ -204,7 +210,7 @@ class SpeechBubble:
         if not self.visible:
             return
         if self._mode == "x11":
-            self._position_x11()
+            self._position_x11(True)
         elif self._mode == "wayland":
             self._position_wayland_anchor()
 
@@ -229,11 +235,30 @@ class SpeechBubble:
 
     def _reposition_after_text_change(self) -> None:
         if self._mode == "x11":
-            self._position_x11()
-            GLib.idle_add(self._position_x11)
-            GLib.timeout_add(24, self._position_x11)
+            # The surface changed size, so re-apply even if the target looks
+            # unchanged: the anchor was computed for the previous extent.
+            self._position_x11(True)
+            GLib.idle_add(self._position_x11, True)
+            GLib.timeout_add(24, self._position_x11, True)
+            self._invalidate_surface()
+            GLib.idle_add(self._invalidate_surface)
+            GLib.timeout_add(24, self._invalidate_surface)
         elif self._mode == "wayland":
             self._position_wayland_anchor()
+
+    def _invalidate_surface(self) -> bool:
+        """Repaint the whole transparent surface after a content change.
+
+        GTK can drop the expose events that follow a configure, leaving the
+        shadow and rounded corners showing whatever the buffer already held.
+        Asking for a full redraw from the application side is what keeps the
+        capsule from striping on Plasma/XWayland. Returns a GLib idle result so
+        it can be scheduled directly.
+        """
+        if self._window.get_visible():
+            self._window.queue_resize()
+            self._window.queue_draw()
+        return GLib.SOURCE_REMOVE
 
     def _advance_typing_preview(self) -> bool:
         if not self.visible or self._pending_text is None:
@@ -321,6 +346,8 @@ class SpeechBubble:
             self._popover.popdown()
         self._stop_following()
         self._mode = None
+        # A remapped window is positioned from scratch.
+        self._applied_position = None
 
     def _fade(
         self,
@@ -361,13 +388,15 @@ class SpeechBubble:
 
     def _on_window_map(self, _window: Gtk.Window) -> None:
         request_keep_above(self._window)
-        GLib.idle_add(self._position_x11)
+        self._applied_position = None
+        GLib.idle_add(self._position_x11, True)
+        GLib.idle_add(self._invalidate_surface)
 
     def _follow_x11(self) -> bool:
         if self._mode != "x11" or not self._window.get_visible():
             self._follow_source_id = None
             return GLib.SOURCE_REMOVE
-        self._position_x11()
+        self._position_x11(force=self._resync_gate.should_force())
         return GLib.SOURCE_CONTINUE
 
     def _visible_anchor_bounds(
@@ -432,7 +461,7 @@ class SpeechBubble:
         rectangle.height = 1
         self._popover.set_pointing_to(rectangle)
 
-    def _position_x11(self) -> bool:
+    def _position_x11(self, force: bool = False) -> bool:
         if self._mode != "x11" or not self._window.get_visible():
             return GLib.SOURCE_REMOVE
         owner_position = get_window_position(self._owner)
@@ -520,7 +549,13 @@ class SpeechBubble:
         y = y_above if y_above >= top else y_below
         x = max(round(left), min(x, max(round(left), round(right - bubble_width))))
         y = max(round(top), min(y, max(round(top), round(bottom - bubble_height))))
-        move_window(self._window, x, y)
+        target = (x, y)
+        # Skip redundant moves: recomposing a translucent window 45 times a
+        # second for an unchanged position is what leaves stale regions behind
+        # on some compositors.
+        if should_move(self._applied_position, target, force=force):
+            if move_window(self._window, target[0], target[1]):
+                self._applied_position = target
         return GLib.SOURCE_REMOVE
 
     def _cancel_sources(self) -> None:
