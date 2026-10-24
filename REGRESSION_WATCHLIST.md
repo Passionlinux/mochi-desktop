@@ -57,6 +57,9 @@ Use this checklist for interaction/state changes and before release checkpoints.
 - [ ] Bond progress and Focus bond hints still outrank the nameplate
 - [ ] Nameplate remains non-targetable and does not interfere with click/drag/right-click
 - [ ] Repeated hover/speech cycles do not leave the nameplate stuck visible or transparent
+- [ ] Ten "Preview typing phrase" bubbles in a row (Mochi Lab) stay fully legible on KDE Plasma — no black-and-white striping, no stale shadow
+- [ ] A resting Mochi keeps the bubble perfectly still, with no jitter from redundant moves; dragging Mochi re-anchors it immediately
+- [ ] A bubble still follows Mochi during a fast drag and fades out in place, not at a stale position
 - [ ] Every ordinary bubble still goes through the single speech funnel, so French copy cannot be bypassed by a new caller
 - [ ] `MOCHI_LANG=en` restores the original English copy for menus, windows, and dialogue
 

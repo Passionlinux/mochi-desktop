@@ -5,7 +5,8 @@
 **Builds on:** `docs/superpowers/specs/2026-10-24-cross-desktop-ambisense-design.md`,
 `src/mochi/presence/bubble.py`, `src/mochi/x11.py`, `src/mochi/shortcut_signal.py`
 
-**Status:** proposed 2026-10-24. Awaiting approval before implementation.
+**Status:** approved 2026-10-24. Implementation follows
+`docs/superpowers/plans/2026-10-24-plasma-polish.md`.
 
 ## Purpose
 

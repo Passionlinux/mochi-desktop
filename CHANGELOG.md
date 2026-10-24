@@ -51,6 +51,14 @@ Mochi is still in early public alpha, so behavior, configuration, and compatibil
   launching with `MOCHI_LANG=en` restores the original English copy. No new
   runtime dependency and no network access are involved.
 
+### Fixed
+
+- The speech bubble no longer occasionally renders as black-and-white stripes
+  on KDE Plasma. The bubble is a transparent window, and Mochi was repositioning
+  it about 45 times a second even when it had not moved, then relying on partial
+  redraws when its text changed size. It now moves only when the position
+  actually changes and repaints the whole window after each text change.
+
 ## 0.4.1 — Stabilization & Portability
 
 Mochi notices where your attention goes, and stays animated and updatable
