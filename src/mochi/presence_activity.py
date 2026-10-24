@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 
-from mochi import desktop_env
+from mochi import desktop_env, x11_idle
 from mochi.helper_connection import HelperConnection
 
 # Same idle threshold as the GNOME extension (USER_IDLE_AFTER_MS = 120_000), so
@@ -329,6 +329,110 @@ class ScreenSaverPresenceBackend:
         self._on_user_active = None
 
 
+class X11ScreenSaverBackend:
+    """Semantic presence from the X11 XScreenSaver idle counter.
+
+    Used when no screen-saver D-Bus provider exposes idle time, which is the
+    common case on plain X11 sessions. Privacy: only an idle duration is read.
+    """
+
+    name = "X11 XScreenSaver idle"
+
+    def __init__(
+        self,
+        *,
+        probe_factory: Callable[[], object] | None = None,
+        gio_loader: Callable[[], tuple[object, object]] | None = None,
+    ) -> None:
+        self._probe_factory = probe_factory or x11_idle.open_idle_probe
+        self._gio_loader = gio_loader or self._load_gio
+        self._glib = None
+        self._probe = None
+        self._timer_id: int | None = None
+        self._on_user_idle: Callable[[], None] | None = None
+        self._on_user_active: Callable[[], None] | None = None
+        self._is_idle = False
+        self.last_error: str | None = None
+
+    @property
+    def active(self) -> bool:
+        return self._probe is not None and self._timer_id is not None
+
+    @staticmethod
+    def _load_gio():
+        import gi
+
+        from gi.repository import Gio, GLib
+
+        return Gio, GLib
+
+    def start(
+        self, on_user_idle: Callable[[], None], on_user_active: Callable[[], None]
+    ) -> bool:
+        if self.active:
+            return True
+        self.last_error = None
+        self._on_user_idle = on_user_idle
+        self._on_user_active = on_user_active
+        self._is_idle = False
+        try:
+            self._gio, self._glib = self._gio_loader()
+            self._probe = self._probe_factory()
+            if self._probe is None:
+                self.last_error = "the XScreenSaver extension is unavailable"
+                self.stop()
+                return False
+            if self._probe.idle_milliseconds() is None:
+                self.last_error = "the XScreenSaver query returned no idle time"
+                self.stop()
+                return False
+            self._timer_id = self._glib.timeout_add_seconds(
+                max(1, int(PRESENCE_POLL_SECONDS)), self._poll
+            )
+            if not self._timer_id:
+                raise RuntimeError("idle poll timer could not be started")
+            return True
+        except Exception as exc:
+            self.last_error = f"{type(exc).__name__}: {exc}"
+            self.stop()
+            return False
+
+    def _poll(self) -> bool:
+        probe = self._probe
+        if probe is None:
+            return False
+        idle_seconds = x11_idle.idle_seconds_from_milliseconds(probe.idle_milliseconds())
+        if idle_seconds is None:
+            return True
+        self._emit(idle_seconds >= IDLE_THRESHOLD_SECONDS)
+        return True
+
+    def _emit(self, idle: bool) -> None:
+        if idle == self._is_idle:
+            return
+        self._is_idle = idle
+        callback = self._on_user_idle if idle else self._on_user_active
+        if callback is not None:
+            callback()
+
+    def stop(self) -> None:
+        if self._timer_id is not None and self._glib is not None:
+            try:
+                self._glib.source_remove(self._timer_id)
+            except Exception:
+                pass
+        self._timer_id = None
+        if self._probe is not None:
+            try:
+                self._probe.close()
+            except Exception:
+                pass
+        self._probe = None
+        self._is_idle = False
+        self._on_user_idle = None
+        self._on_user_active = None
+
+
 class PresenceActivityMonitor:
     """Lifecycle wrapper around the first available presence backend.
 
@@ -366,6 +470,7 @@ class PresenceActivityMonitor:
         if current == "gnome":
             chain.append(GnomeShellPresenceBackend())
         chain.append(ScreenSaverPresenceBackend())
+        chain.append(X11ScreenSaverBackend())
         return tuple(chain)
 
     @property

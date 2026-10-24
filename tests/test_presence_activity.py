@@ -5,7 +5,9 @@ from mochi.presence_activity import (
     GnomeShellPresenceBackend,
     PresenceActivityMonitor,
     ScreenSaverPresenceBackend,
+    X11ScreenSaverBackend,
 )
+from mochi.x11_idle import idle_seconds_from_milliseconds
 
 
 class _Variant:
@@ -355,13 +357,15 @@ class ScreenSaverPresenceBackendTests(unittest.TestCase):
 class PresenceChainTests(unittest.TestCase):
     def test_default_chain_skips_gnome_off_gnome(self) -> None:
         chain = PresenceActivityMonitor._default_backends("kde")
-        self.assertEqual(len(chain), 1)
+        self.assertEqual(len(chain), 2)
         self.assertIsInstance(chain[0], ScreenSaverPresenceBackend)
+        self.assertIsInstance(chain[1], X11ScreenSaverBackend)
 
     def test_default_chain_keeps_gnome_first_on_gnome(self) -> None:
         chain = PresenceActivityMonitor._default_backends("gnome")
         self.assertIsInstance(chain[0], GnomeShellPresenceBackend)
         self.assertIsInstance(chain[1], ScreenSaverPresenceBackend)
+        self.assertIsInstance(chain[2], X11ScreenSaverBackend)
 
     def test_first_starting_backend_wins(self) -> None:
         failing = _FakeBackend(available=False)
@@ -374,3 +378,69 @@ class PresenceChainTests(unittest.TestCase):
         self.assertTrue(monitor.start())
         self.assertEqual(monitor.backend_name, "fake presence")
         self.assertEqual(failing.stop_calls, 0)
+
+
+class X11IdleHelperTests(unittest.TestCase):
+    def test_milliseconds_to_seconds(self) -> None:
+        self.assertEqual(idle_seconds_from_milliseconds(250_000), 250.0)
+        self.assertEqual(idle_seconds_from_milliseconds(0), 0.0)
+
+    def test_invalid_values_return_none(self) -> None:
+        self.assertIsNone(idle_seconds_from_milliseconds(None))
+        self.assertIsNone(idle_seconds_from_milliseconds(-1))
+        self.assertIsNone(idle_seconds_from_milliseconds(True))
+        self.assertIsNone(idle_seconds_from_milliseconds("5"))
+
+
+class _FakeProbe:
+    def __init__(self, values) -> None:
+        self.values = list(values)
+        self.closed = 0
+
+    def idle_milliseconds(self):
+        if not self.values:
+            return None
+        return self.values.pop(0)
+
+    def close(self) -> None:
+        self.closed += 1
+
+
+class X11ScreenSaverBackendTests(unittest.TestCase):
+    def _backend(self, probe, glib):
+        return X11ScreenSaverBackend(
+            probe_factory=lambda: probe,
+            gio_loader=lambda: (_ScreenSaverGio, glib),
+        )
+
+    def test_missing_probe_fails_with_reason(self) -> None:
+        backend = self._backend(None, _ScreenSaverGLib())
+        self.assertFalse(backend.start(lambda: None, lambda: None))
+        self.assertIsNotNone(backend.last_error)
+
+    def test_crossing_threshold_emits_edges(self) -> None:
+        probe = _FakeProbe([10_000, 200_000, 250_000, 5_000])
+        glib = _ScreenSaverGLib()
+        backend = self._backend(probe, glib)
+        events = []
+        self.assertTrue(
+            backend.start(lambda: events.append("idle"), lambda: events.append("active"))
+        )
+        poll = next(iter(glib.timers.values()))
+        poll()
+        poll()
+        poll()
+        poll()
+        self.assertEqual(events, ["idle", "active"])
+        self.assertTrue(backend.active)
+
+    def test_stop_closes_probe_and_removes_timer_once(self) -> None:
+        probe = _FakeProbe([10_000])
+        glib = _ScreenSaverGLib()
+        backend = self._backend(probe, glib)
+        self.assertTrue(backend.start(lambda: None, lambda: None))
+        backend.stop()
+        backend.stop()
+        self.assertEqual(probe.closed, 1)
+        self.assertEqual(len(glib.removed), 1)
+        self.assertFalse(backend.active)
