@@ -1,7 +1,11 @@
 import logging
 import unittest
 
-from mochi.presence_activity import GnomeShellPresenceBackend, PresenceActivityMonitor
+from mochi.presence_activity import (
+    GnomeShellPresenceBackend,
+    PresenceActivityMonitor,
+    ScreenSaverPresenceBackend,
+)
 
 
 class _Variant:
@@ -195,3 +199,178 @@ class PresenceMonitorTests(unittest.TestCase):
         monitor.stop()
         monitor.stop()
         self.assertEqual(backend.stop_calls, 1)
+
+
+class _ScreenSaverGLib:
+    class VariantType:
+        @staticmethod
+        def new(signature):
+            return signature
+
+    class Variant:
+        @staticmethod
+        def new_string(value):
+            return value
+
+        @staticmethod
+        def new_tuple(values):
+            return tuple(values)
+
+    def __init__(self):
+        self.timers = {}
+        self.removed = []
+        self._next = 1
+
+    def timeout_add_seconds(self, _seconds, callback):
+        identifier = self._next
+        self._next += 1
+        self.timers[identifier] = callback
+        return identifier
+
+    def source_remove(self, identifier):
+        self.removed.append(identifier)
+        self.timers.pop(identifier, None)
+
+
+class _ScreenSaverConnection:
+    def __init__(self, *, has_owner=True, methods=None):
+        self.has_owner = has_owner
+        self.methods = dict(methods or {})
+        self.subscriptions = []
+        self.callbacks = {}
+        self.unsubscribed = []
+        self._next = 11
+
+    def call_sync(self, bus, path, interface, method, params, reply_type, flags, timeout, cancellable):
+        if method == "NameHasOwner":
+            return _Variant("(b)", (self.has_owner,))
+        outcome = self.methods.get(method)
+        if isinstance(outcome, Exception):
+            raise outcome
+        if outcome is None:
+            raise RuntimeError(f"{method} is not provided")
+        if callable(outcome):
+            outcome = outcome()
+        return _Variant("(u)", (outcome,))
+
+    def signal_subscribe(self, *args):
+        identifier = self._next
+        self._next += 1
+        self.subscriptions.append(args)
+        self.callbacks[args[2]] = args[-1]
+        return identifier
+
+    def signal_unsubscribe(self, identifier):
+        self.unsubscribed.append(identifier)
+
+
+class _ScreenSaverGio:
+    class BusType:
+        SESSION = object()
+
+    class DBusCallFlags:
+        NONE = object()
+
+    class DBusSignalFlags:
+        NONE = object()
+
+    connection = None
+
+    @classmethod
+    def bus_get_sync(cls, _bus_type, _cancellable):
+        return cls.connection
+
+
+class ScreenSaverPresenceBackendTests(unittest.TestCase):
+    def _backend(self, connection):
+        _ScreenSaverGio.connection = connection
+        glib = _ScreenSaverGLib()
+        backend = ScreenSaverPresenceBackend(
+            gio_loader=lambda: (_ScreenSaverGio, glib)
+        )
+        return backend, glib
+
+    def test_idle_time_crossing_emits_once_per_edge(self) -> None:
+        connection = _ScreenSaverConnection(has_owner=True)
+        values = [10, 200, 250, 5]
+        connection.methods = {
+            "GetSessionIdleTime": lambda *_: values.pop(0)
+        }
+        backend, glib = self._backend(connection)
+        events = []
+        self.assertTrue(backend.start(lambda: events.append("idle"), lambda: events.append("active")))
+        self.assertEqual(len(glib.timers), 1)
+        poll = next(iter(glib.timers.values()))
+
+        poll()  # 10s: below threshold, no event
+        poll()  # 200s: idle
+        poll()  # 250s: still idle, no duplicate
+        poll()  # 5s: back to active
+        self.assertEqual(events, ["idle", "active"])
+
+    def test_no_provider_fails_with_reason(self) -> None:
+        connection = _ScreenSaverConnection(has_owner=False)
+        backend, _glib = self._backend(connection)
+        self.assertFalse(backend.start(lambda: None, lambda: None))
+        self.assertFalse(backend.active)
+        self.assertIsNotNone(backend.last_error)
+
+    def test_active_changed_signal_drives_transitions(self) -> None:
+        connection = _ScreenSaverConnection(has_owner=True)
+        condition = RuntimeError("method not provided")
+        connection.methods = {
+            "GetSessionIdleTime": condition,
+            "GetTimeSinceUserActivity": condition,
+        }
+        backend, _glib = self._backend(connection)
+        events = []
+        self.assertTrue(
+            backend.start(lambda: events.append("idle"), lambda: events.append("active"))
+        )
+        self.assertIn(ScreenSaverPresenceBackend.ACTIVE_CHANGED, connection.callbacks)
+
+        payload = lambda value: _Variant("(b)", (value,))
+        connection.callbacks[ScreenSaverPresenceBackend.ACTIVE_CHANGED](
+            None, None, None, None, None, payload(True)
+        )
+        connection.callbacks[ScreenSaverPresenceBackend.ACTIVE_CHANGED](
+            None, None, None, None, None, payload(True)
+        )
+        connection.callbacks[ScreenSaverPresenceBackend.ACTIVE_CHANGED](
+            None, None, None, None, None, payload(False)
+        )
+        self.assertEqual(events, ["idle", "active"])
+
+    def test_stop_cancels_timer_and_unsubscribes_once(self) -> None:
+        connection = _ScreenSaverConnection(has_owner=True)
+        connection.methods = {"GetSessionIdleTime": 5}
+        backend, glib = self._backend(connection)
+        self.assertTrue(backend.start(lambda: None, lambda: None))
+        backend.stop()
+        backend.stop()
+        self.assertEqual(len(glib.removed), 1)
+        self.assertFalse(backend.active)
+
+
+class PresenceChainTests(unittest.TestCase):
+    def test_default_chain_skips_gnome_off_gnome(self) -> None:
+        chain = PresenceActivityMonitor._default_backends("kde")
+        self.assertEqual(len(chain), 1)
+        self.assertIsInstance(chain[0], ScreenSaverPresenceBackend)
+
+    def test_default_chain_keeps_gnome_first_on_gnome(self) -> None:
+        chain = PresenceActivityMonitor._default_backends("gnome")
+        self.assertIsInstance(chain[0], GnomeShellPresenceBackend)
+        self.assertIsInstance(chain[1], ScreenSaverPresenceBackend)
+
+    def test_first_starting_backend_wins(self) -> None:
+        failing = _FakeBackend(available=False)
+        working = _FakeBackend()
+        monitor = PresenceActivityMonitor(
+            on_user_idle=lambda: None,
+            on_user_active=lambda: None,
+            backends=(failing, working),
+        )
+        self.assertTrue(monitor.start())
+        self.assertEqual(monitor.backend_name, "fake presence")
+        self.assertEqual(failing.stop_calls, 0)
