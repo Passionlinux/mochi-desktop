@@ -19,7 +19,24 @@ Mochi is still in early public alpha, so behavior, configuration, and compatibil
   files, commands, or its replies, and Mochi makes no network requests. See
   [Agent Companion](docs/agent-companion.md) for setup.
 
+- Mochi now reacts to typing and to you stepping away on desktops without the
+  GNOME helper. Off GNOME he reads the standard screen-saver idle interface
+  (falling back to the X11 XScreenSaver counter) for away and return, and the
+  AT-SPI keyboard monitor for typing. Same two-minute idle threshold as the
+  GNOME extension, same privacy boundary: only anonymous activity and an idle
+  duration, never content.
+
+- The new `mochi-emote-catalogue` command opens the Emote Catalogue in a
+  running Mochi. Bind it to a keyboard shortcut in KDE Plasma, XFCE, MATE or
+  Cinnamon to replace the GNOME-only `Ctrl + Alt + E`.
+
 ### Changed
+
+- On Wayland, Mochi now uses its XWayland window on every desktop whose
+  compositor lacks `wlr-layer-shell` (GNOME, KDE, and others), not only GNOME,
+  so the buddy stays draggable and keeps his saved position. wlroots
+  compositors keep their native layer-shell surface; set
+  `MOCHI_NATIVE_WAYLAND=1` to opt out anywhere.
 
 - Mochi's interface and dialogue are now in French by default, including the
   right-click menu, Mochi Lab, Focus, Pocket, the Emote Catalogue, Quick Start,

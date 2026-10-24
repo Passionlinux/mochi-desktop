@@ -393,15 +393,45 @@ in the same local package with no extra dependency or network access.
 - **Community verified:** CachyOS + Umbriel + Wayland — installation and runtime
   confirmed working by the reporter of [#125](https://github.com/miflow13/mochi-desktop/issues/125)
   after the portability fixes in [#126](https://github.com/miflow13/mochi-desktop/pull/126).
-- Mochi uses an XWayland GTK window on GNOME Wayland for reliable desktop
-  positioning.
+- Mochi uses an XWayland GTK window on Wayland desktops whose compositor lacks
+  `wlr-layer-shell` (GNOME, KDE, and others) for reliable desktop positioning.
+  wlroots compositors keep their native layer-shell surface; set
+  `MOCHI_NATIVE_WAYLAND=1` to force the native path anywhere.
 - Other distributions may work, but automatic dependency installation currently
   supports Fedora. Mochi's installer no longer requires Fedora's Python build
   packages to provide the local setuptools build backend.
-- GNOME provides the fullest AmbiSense integration. On non-GNOME desktops, the
-  optional GNOME helper is skipped instead of blocking installation.
+- GNOME still provides the fullest AmbiSense integration and receives the most
+  regression coverage. Other desktops get portable equivalents; the optional
+  GNOME helper is skipped instead of blocking installation.
 - Niri, fractional scaling, multi-monitor setups, and non-GNOME environments
   receive less regression coverage.
+
+### What works off GNOME
+
+| Capability | GNOME (helper) | KDE Plasma | XFCE / MATE / Cinnamon |
+|---|---|---|---|
+| Typing reactions | helper | AT-SPI | AT-SPI |
+| Away / return | helper | screen-saver idle | screen-saver or X11 idle |
+| Media playback | helper + MPRIS | MPRIS | MPRIS |
+| Battery / network / suspend / lock | all desktops | all desktops | all desktops |
+| Focused app / file-browsing context | helper | — | — |
+| Browser tab awareness | helper | — | — |
+| Light / dark theme | portal | portal | portal (best effort) |
+| Emote Catalogue shortcut | `Ctrl + Alt + E` | `mochi-emote-catalogue` | `mochi-emote-catalogue` |
+
+Typing reactions off GNOME need the accessibility bus (AT-SPI). On KDE that is
+`kaccess`; on XFCE, MATE and Cinnamon it is usually already running.
+
+### Opening the Emote Catalogue without GNOME
+
+`Ctrl + Alt + E` is delivered by the GNOME helper. On other desktops, bind a
+keyboard shortcut to the `mochi-emote-catalogue` command:
+
+- **KDE Plasma:** System Settings → Shortcuts → Add → Command or Script, and
+  assign a key.
+- **XFCE:** Settings → Keyboard → Application Shortcuts → Add.
+- **MATE:** System → Preferences → Hardware → Keyboard Shortcuts → Add.
+- **Cinnamon:** Keyboard → Shortcuts → Custom Shortcuts → Add.
 
 ### Known issues
 

@@ -122,6 +122,7 @@ Use this checklist for interaction/state changes and before release checkpoints.
 
 - [ ] Catalogue opens from the normal UI path
 - [ ] `Ctrl + Alt + E` opens the catalogue when the GNOME helper is available
+- [ ] `mochi-emote-catalogue` opens the catalogue on a non-GNOME desktop
 - [ ] Locked, unlocked, and coming-soon states match the current bond level
 - [ ] Implemented emotes animate on hover without restarting uncontrollably
 - [ ] Placeholder/mystery entries remain non-interactive where intended
@@ -226,6 +227,27 @@ Fresh Fedora GNOME/Wayland/XWayland QA:
 - [ ] Re-enable repeatedly; verify each transition is delivered once and current context returns without restarting Mochi
 - [ ] During a helper outage, verify MPRIS playback and Downloads activity remain functional
 - [ ] Stop Mochi and verify no later helper events affect it
+
+## Cross-Desktop AmbiSense (non-GNOME)
+
+GNOME keeps the helper first. Other desktops use portable sources, chosen by a
+backend chain; `mochi --debug` logs the selected backend for typing, presence
+and windowing.
+
+Automated coverage: `python -m pytest tests/test_desktop_env.py
+tests/test_presence_activity.py tests/test_typing_activity.py tests/test_main.py
+tests/test_shortcut_signal.py`.
+
+Fresh KDE Plasma (Wayland), XFCE (X11) and MATE (X11) QA:
+
+- [ ] Leave the machine untouched past two minutes; the away reaction plays, and a key press returns Mochi to active
+- [ ] A short typing burst in a text editor starts and stops the typing mirror
+- [ ] Drag Mochi near each screen edge; he stays inside the work area and relaunch puts him back
+- [ ] `Ctrl + Alt + E` does nothing off GNOME; the bound `mochi-emote-catalogue` shortcut opens the catalogue
+- [ ] On KDE Wayland, Mochi still drags and keeps position (XWayland path)
+- [ ] On a wlroots compositor (e.g. sway), Mochi keeps its native layer-shell surface and `GDK_BACKEND` is not forced
+- [ ] `mochi --debug` names the presence backend actually selected on each desktop
+- [ ] On GNOME, `Ctrl + Alt + E` and the helper-backed reactions are unchanged
 
 ## Update Service / Install Lifecycle
 

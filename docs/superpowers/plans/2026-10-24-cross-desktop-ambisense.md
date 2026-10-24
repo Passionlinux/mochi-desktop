@@ -52,8 +52,8 @@ via the existing `ctypes`/libX11 helpers, pytest.
 | `tests/test_typing_activity.py` | Chain-selection tests | 2 |
 | `src/mochi/presence_activity.py` | `ScreenSaverPresenceBackend`, backend chain | 3 |
 | `tests/test_presence_activity.py` | Idle-edge tests with a fake timer/clock | 3 |
-| `src/mochi/presence/x11_idle.py` (new) | XScreenSaver probe via `ctypes` | 4 |
-| `tests/test_presence_activity.py` | X11 idle backend tests | 4 |
+| `src/mochi/x11_idle.py` (new) | XScreenSaver probe via `ctypes` | 4 |
+| `tests/test_presence_activity.py` | `X11ScreenSaverBackend` + probe-helper tests | 4 |
 | `src/mochi/main.py` | Extend `configure_display_backend` to non-wlroots Wayland | 5 |
 | `tests/test_main.py` | Backend selection matrix | 5 |
 | `src/mochi/app.py` | `emote-catalogue` (+ `developer-menu`) actions | 6 |
@@ -134,14 +134,16 @@ via the existing `ctypes`/libX11 helpers, pytest.
 ### Task 4: X11 idle fallback
 
 **Files:**
-- Create `src/mochi/presence/x11_idle.py`
-- Modify `src/mochi/presence_activity.py`
+- Create `src/mochi/x11_idle.py` (the ctypes probe)
+- Modify `src/mochi/presence_activity.py` (`X11ScreenSaverBackend`, next to the
+  other backends, so `presence_activity` never imports the `mochi.presence`
+  package and no import cycle appears)
 - Modify `tests/test_presence_activity.py`
 
 **Interfaces:**
-- Produces: `X11ScreenSaverBackend` (same interface as Task 3) and a pure
-  helper `idle_ms_from_query_info(info)` / `crossed_threshold(prev, idle, threshold)`
-  testable without X11.
+- Produces: `X11ScreenSaverBackend` (same interface as Task 3), plus the pure
+  helpers `x11_idle.idle_seconds_from_milliseconds(...)` and the
+  `idle_milliseconds()` probe contract, testable without X11.
 
 - [ ] Test the pure threshold/edge helpers directly (no X11 needed).
 - [ ] Implement the XScreenSaver probe by loading `libXss`/`libX11` through

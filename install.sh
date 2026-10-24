@@ -13,6 +13,7 @@ LAUNCHER="$BIN_DIR/mochi"
 UPDATE_LAUNCHER="$BIN_DIR/mochi-update"
 UNINSTALL_LAUNCHER="$BIN_DIR/mochi-uninstall"
 AGENT_SIGNAL_LAUNCHER="$BIN_DIR/mochi-agent-signal"
+EMOTE_CATALOGUE_LAUNCHER="$BIN_DIR/mochi-emote-catalogue"
 INSTALLED_UNINSTALLER="$APP_HOME/uninstall.sh"
 APPLICATIONS_DIR="$DATA_HOME/applications"
 DESKTOP_FILE="$APPLICATIONS_DIR/$APP_ID.desktop"
@@ -209,6 +210,11 @@ install_integrations() {
         return 1
     fi
     install_launcher "$AGENT_SIGNAL_LAUNCHER" "$VENV/bin/mochi-agent-signal"
+    if [[ ! -x "$VENV/bin/mochi-emote-catalogue" ]]; then
+        warn "Mochi emote catalogue command is missing: $VENV/bin/mochi-emote-catalogue"
+        return 1
+    fi
+    install_launcher "$EMOTE_CATALOGUE_LAUNCHER" "$VENV/bin/mochi-emote-catalogue"
 
     install -m 0755 "$ROOT/uninstall.sh" "$INSTALLED_UNINSTALLER"
     install_launcher "$UNINSTALL_LAUNCHER" "$INSTALLED_UNINSTALLER"
@@ -298,7 +304,15 @@ show_install_complete() {
     else
         printf '\n'
         warn "GNOME desktop-awareness helper is unavailable on this desktop."
-        printf 'Mochi will run with reduced contextual awareness and without GNOME global shortcuts.\n'
+        printf '%s\n' "Mochi still reacts to typing and to you stepping away here, using"
+        printf '%s\n' "portable desktop APIs, and keeps its battery, media and suspend"
+        printf '%s\n' "awareness. Focused application and browser-tab awareness stay"
+        printf '%s\n' "GNOME-only for privacy."
+        printf '\n'
+        printf '%s\n' "To open the Emote Catalogue, bind a keyboard shortcut to:"
+        printf '    %s\n' "mochi-emote-catalogue"
+        printf '%s\n' "KDE: System Settings → Shortcuts · XFCE: Keyboard → Application"
+        printf '%s\n' "Shortcuts · MATE: Keyboard Shortcuts · Cinnamon: Custom Shortcuts"
     fi
     printf '\n'
 }
@@ -335,6 +349,10 @@ if command -v dnf >/dev/null 2>&1 && command -v rpm >/dev/null 2>&1; then
     )
     if $IS_GNOME; then
         packages+=(gnome-shell)
+    else
+        # Off GNOME, the AT-SPI accessibility bus powers portable typing
+        # reactions, so make sure it is present.
+        packages+=(at-spi2-core)
     fi
     missing=()
     for package in "${packages[@]}"; do

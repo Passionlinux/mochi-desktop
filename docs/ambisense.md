@@ -40,6 +40,29 @@ Depending on the desktop environment and available helpers, AmbiSense can use:
 These signals are intentionally lower-resolution than the underlying desktop
 activity.
 
+## Other desktops
+
+The GNOME helper is the richest source, but most signals have a portable
+equivalent, so KDE Plasma, XFCE, MATE and Cinnamon get as much as their desktop
+APIs allow:
+
+- **Typing** comes from the AT-SPI keyboard monitor when the GNOME Shell pulse
+  is unavailable. It discards every key payload and reports only that typing
+  happened.
+- **Away / return** comes from the standard screen-saver idle interface
+  (`org.freedesktop.ScreenSaver` and its desktop-specific names), which exposes
+  idle time or a payload-free active change, and, on plain X11, from the
+  XScreenSaver idle counter. Both read only an idle duration or flag.
+- **Media playback** already uses MPRIS everywhere.
+- **Battery, charging, network, suspend, lock** already use UPower,
+  NetworkManager and logind on every desktop.
+
+The GNOME helper stays first wherever it exists. Application-category and
+file-browsing context, and browser-tab awareness, still require the GNOME
+helper: reproducing them elsewhere would move window or tab information into
+Mochi's own process. See the cross-desktop design in
+[docs/superpowers/specs](superpowers/specs/2026-10-24-cross-desktop-ambisense-design.md).
+
 ## Privacy model
 
 Typing awareness is content-blind. Mochi does not store characters, inspect
