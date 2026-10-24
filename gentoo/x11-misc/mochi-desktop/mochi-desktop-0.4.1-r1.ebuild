@@ -13,7 +13,9 @@ MY_COMMIT="8e7459713539cbd6520a39db325b74aa1afd8b3e"
 
 DESCRIPTION="A tiny, local-first desktop companion for Linux"
 HOMEPAGE="https://github.com/miflow13/mochi-desktop"
-SRC_URI="https://github.com/Passionlinux/mochi-desktop/archive/${MY_COMMIT}.tar.gz -> ${P}.tar.gz"
+# ${PV} rather than ${P}: the local distfile name stays put across revisions,
+# so a revision bump reuses the cached tarball and its Manifest entry.
+SRC_URI="https://github.com/Passionlinux/mochi-desktop/archive/${MY_COMMIT}.tar.gz -> mochi-desktop-${PV}.tar.gz"
 S="${WORKDIR}/mochi-desktop-${MY_COMMIT}"
 
 LICENSE="MIT"

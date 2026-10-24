@@ -13,7 +13,7 @@ gentoo/
 ├── profiles/repo_name                    # mochi-desktop
 ├── profiles/categories                   # x11-misc
 └── x11-misc/mochi-desktop/
-    ├── mochi-desktop-0.4.1.ebuild        # pinned commit, immutable tarball
+    ├── mochi-desktop-0.4.1-r1.ebuild     # pinned commit, immutable tarball
     ├── mochi-desktop-9999.ebuild         # live, tracks the fork's main branch
     ├── Manifest
     ├── metadata.xml
@@ -56,17 +56,20 @@ compete for the same command name.
 
 | ebuild | source | rebuilds when |
 | --- | --- | --- |
-| `0.4.1` | `github.com/Passionlinux/mochi-desktop/archive/<commit>.tar.gz` | you bump `MY_COMMIT` and refresh `Manifest` |
+| `0.4.1-r1` | `github.com/Passionlinux/mochi-desktop/archive/<commit>.tar.gz` | you bump `MY_COMMIT` and refresh `Manifest` |
 | `9999` | `github.com/Passionlinux/mochi-desktop.git#main` | always (live) |
 
-`0.4.1` is pinned to commit `8e7459713539cbd6520a39db325b74aa1afd8b3e` (the
+`0.4.1-r1` is pinned to commit `8e7459713539cbd6520a39db325b74aa1afd8b3e` (the
 commit that carries the cross-desktop work) rather than the upstream `v0.4.1`
-tag, so it builds exactly the code in this repository. Bumping it:
+tag, so it builds exactly the code in this repository. Revision `-r1` adds
+`x11-libs/libXScrnSaver`: `mochi/x11_idle.py` loads `libXss` through ctypes, and
+`libX11` does not provide it, so X11 sessions without it lose idle detection
+silently. Bumping it:
 
 ```sh
-# edit MY_COMMIT in mochi-desktop-0.4.1.ebuild, then
+# edit MY_COMMIT in mochi-desktop-0.4.1-r1.ebuild, then
 cd gentoo/x11-misc/mochi-desktop
-ebuild mochi-desktop-0.4.1.ebuild manifest   # or: pkgdev manifest x11-misc/mochi-desktop
+ebuild mochi-desktop-0.4.1-r1.ebuild manifest   # or: pkgdev manifest x11-misc/mochi-desktop
 ```
 
 To build the live ebuild straight from your working tree without pushing:
