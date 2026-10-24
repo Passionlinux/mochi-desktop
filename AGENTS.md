@@ -37,6 +37,27 @@ GDK_BACKEND=x11 (XWayland), set in src/mochi/main.py. Do not change that.
    (docs/superpowers/plans/YYYY-MM-DD-<slug>.md) matching existing files.
 3. Stop and wait for approval. Raise disagreements with the task design here, not mid-implementation.
 4. After approval: test-first, small commits.
+5. Packaging changes under `gentoo/` are published too: after committing, run
+   `gentoo/push-to-overlay.sh` so
+   github.com/Passionlinux/passiongnulinux-overlay (the copy `emerge` actually
+   consumes) stays in step.
+
+## Gentoo overlay mirror (every commit)
+`gentoo/x11-misc/mochi-desktop` is the source of truth, mirrored in the maintainer's
+public overlay: https://github.com/Passionlinux/passiongnulinux-overlay
+(`x11-misc/mochi-desktop`). Whenever a commit or push changes packaging, version,
+dependencies, installed files, or the pinned commit:
+
+1. Update `gentoo/x11-misc/mochi-desktop` in this repo (ebuild, `Manifest`,
+   `metadata.xml`, `files/`) and verify with `pkgcheck scan --net x11-misc/mochi-desktop`.
+2. Copy the same files to a writable clone of the overlay (e.g.
+   `~/Projets/IA/passiongnulinux-overlay`, `git@github.com:Passionlinux/...`),
+   commit there, and push to `main`. Never leave the overlay behind.
+3. The Portage copy under `/var/db/repos/` is root-owned; it only refreshes through
+   the maintainer's `sudo emaint sync -r passiongnulinux-overlay`. Report it as a
+   manual step instead of claiming it is done.
+
+Runtime-only commits need no overlay change; say so explicitly in the final report.
 
 ## Verification
 - Run `python3 -m pytest -q` and report the actual output summary.

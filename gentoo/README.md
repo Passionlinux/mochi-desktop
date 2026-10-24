@@ -74,6 +74,9 @@ ebuild mochi-desktop-0.4.1-r1.ebuild manifest   # or: pkgdev manifest x11-misc/m
 
 ## Testing local changes with emerge
 
+The examples below use `sudo`; on a machine without it (this one has only
+`su` and `pkexec`) run the same commands as root.
+
 The live ebuild can build your checkout directly, so local iteration needs no
 push and no new pin. `9999` carries `KEYWORDS=""`; unmask it once:
 
@@ -120,6 +123,36 @@ Back to the pinned build:
 
 ```sh
 sudo emerge -av --oneshot =x11-misc/mochi-desktop-0.4.1-r1
+```
+
+## Published overlay
+
+The ebuilds here are also published in
+`github.com/Passionlinux/passiongnulinux-overlay`, under
+`x11-misc/mochi-desktop`. That repository is what `emerge` consumes; this
+`gentoo/` directory is the source it is copied from.
+
+Only the package directory is mirrored. `profiles/`, `metadata/` and the README
+differ between the two repositories (different `repo_name`, extra categories,
+extra `layout.conf` keys), so copying them over would break the overlay.
+
+To publish the current tree:
+
+```sh
+./gentoo/push-to-overlay.sh --dry-run   # show what would change
+./gentoo/push-to-overlay.sh             # copy, commit and push
+```
+
+The script mirrors `x11-misc/mochi-desktop` into a checkout of the overlay
+(`~/Projets/passionlinux/passiongnulinux-overlay` by default, or
+`MOCHI_OVERLAY_DIR`), commits with the mochi commit it came from, and pushes. It
+is a no-op when the two already match.
+
+`/var/db/repos/passiongnulinux-overlay` is Portage's own root-owned copy and is
+not updated by that script. Refresh it after publishing, as root:
+
+```sh
+su -c 'git -C /var/db/repos/passiongnulinux-overlay pull --ff-only'
 ```
 
 ## USE flags
