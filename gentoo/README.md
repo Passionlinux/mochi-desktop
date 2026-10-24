@@ -57,7 +57,7 @@ compete for the same command name.
 | ebuild | source | rebuilds when |
 | --- | --- | --- |
 | `0.4.1-r1` | `github.com/Passionlinux/mochi-desktop/archive/<commit>.tar.gz` | you bump `MY_COMMIT` and refresh `Manifest` |
-| `9999` | `github.com/Passionlinux/mochi-desktop.git#main` | always (live) |
+| `9999` | `github.com/Passionlinux/mochi-desktop.git#main`, or `MOCHI_GIT_REPO` for a local checkout | always (live) |
 
 `0.4.1-r1` is pinned to commit `8e7459713539cbd6520a39db325b74aa1afd8b3e` (the
 commit that carries the cross-desktop work) rather than the upstream `v0.4.1`
@@ -72,14 +72,55 @@ cd gentoo/x11-misc/mochi-desktop
 ebuild mochi-desktop-0.4.1-r1.ebuild manifest   # or: pkgdev manifest x11-misc/mochi-desktop
 ```
 
-To build the live ebuild straight from your working tree without pushing:
+## Testing local changes with emerge
+
+The live ebuild can build your checkout directly, so local iteration needs no
+push and no new pin. `9999` carries `KEYWORDS=""`; unmask it once:
 
 ```sh
-EGIT_REPO_URI="file:///home/sebastien/Projets/IA/mochi" \
-PORTAGE_TMPDIR=... ebuild mochi-desktop-9999.ebuild clean install
+echo "=x11-misc/mochi-desktop-9999 **" | sudo tee /etc/portage/package.accept_keywords/mochi
 ```
 
-or set it permanently in `/etc/portage/env/x11-misc/mochi-desktop`.
+Then point the build at your tree, permanently, with a package env file:
+
+```sh
+sudo tee /etc/portage/env/x11-misc/mochi-desktop >/dev/null <<'EOF'
+MOCHI_GIT_REPO="file:///home/sebastien/Projets/IA/mochi"
+EOF
+```
+
+Rebuild whenever you want to try the current `HEAD`:
+
+```sh
+sudo emerge -av --oneshot =x11-misc/mochi-desktop-9999
+```
+
+`MOCHI_GIT_REPO` takes a URI (`file://` plus an absolute path). It builds only
+**committed** work, so commit before emerging. Setting `EGIT_REPO_URI` in the
+environment does *not* work: the ebuild assigns that variable itself, and the
+assignment wins — which is why the ebuild reads `MOCHI_GIT_REPO` instead.
+
+Without touching `/etc`, the same thing for a single build:
+
+```sh
+MOCHI_GIT_REPO="file:///home/sebastien/Projets/IA/mochi" \
+    ebuild mochi-desktop-9999.ebuild clean install
+```
+
+Two gotchas, both hit while testing this:
+
+* git-r3 fetches from the checkout with `--depth 1`, and git refuses to move a
+  ref that is a shallow root. If the working copy is a shallow clone
+  (`git rev-parse --is-shallow-repository` prints `true`), unpack dies with
+  `Referencing refs/heads/main failed (wrong ref?)`. Run `git fetch --unshallow`
+  once and it works.
+* the checkout needs a `main` branch, because the ebuild sets `EGIT_BRANCH=main`.
+
+Back to the pinned build:
+
+```sh
+sudo emerge -av --oneshot =x11-misc/mochi-desktop-0.4.1-r1
+```
 
 ## USE flags
 
