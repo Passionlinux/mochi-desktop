@@ -322,6 +322,36 @@ class GnomeShellTypingPulseBackendTests(unittest.TestCase):
         self.assertIsNone(backend.last_error)
         self.assertFalse(backend.active)
 
+    def test_helper_presence_is_false_while_the_helper_is_absent(self) -> None:
+        backend = self._backend_with_connection(self._Connection(has_owner=False))
+
+        self.assertTrue(backend.start(lambda: None))
+        self.assertFalse(backend.active)
+        self.assertFalse(backend.helper_present)
+
+    def test_helper_presence_follows_the_helper_appearing(self) -> None:
+        connection = self._Connection(has_owner=False)
+        backend = self._backend_with_connection(connection)
+
+        self.assertTrue(backend.start(lambda: None))
+        self.assertFalse(backend.helper_present)
+
+        connection.has_owner = True
+        backend._helper._appeared(connection, backend.BUS_NAME, ":1.42")
+
+        self.assertTrue(backend.helper_present)
+
+    def test_helper_presence_follows_the_helper_vanishing(self) -> None:
+        backend = self._backend_with_connection(self._Connection(has_owner=True))
+
+        self.assertTrue(backend.start(lambda: None))
+        self.assertTrue(backend.helper_present)
+
+        backend._helper._vanished()
+
+        self.assertFalse(backend.helper_present)
+        self.assertIsNone(backend.last_error)
+
     def test_subscribes_to_zero_payload_pulse(self) -> None:
         connection = self._Connection()
         backend = self._backend_with_connection(connection)

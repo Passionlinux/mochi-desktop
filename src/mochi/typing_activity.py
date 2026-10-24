@@ -126,6 +126,17 @@ class GnomeShellTypingPulseBackend:
     def active(self) -> bool:
         return self._helper is not None and self._helper.active
 
+    @property
+    def helper_present(self) -> bool:
+        """Whether a GNOME Shell helper currently owns the D-Bus name.
+
+        ``start()`` deliberately succeeds even when the helper is absent: the
+        name watch lets Mochi pick the extension up if the user enables it
+        later in the session. Callers that report status must therefore use
+        this property, never the return value of ``start()``.
+        """
+        return self._helper is not None and self._helper.active
+
     @staticmethod
     def _load_gio():
         import gi
