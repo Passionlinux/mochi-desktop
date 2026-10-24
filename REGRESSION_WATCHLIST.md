@@ -234,6 +234,11 @@ GNOME keeps the helper first. Other desktops use portable sources, chosen by a
 backend chain; `mochi --debug` logs the selected backend for typing, presence
 and windowing.
 
+Typing coverage is per application: it exists only where the application
+publishes an AT-SPI tree. GTK terminals do; Konsole (Qt) does not, even with
+`QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1`, so missing typing reactions there are
+expected rather than a regression.
+
 Automated coverage: `python -m pytest tests/test_desktop_env.py
 tests/test_presence_activity.py tests/test_typing_activity.py tests/test_main.py
 tests/test_shortcut_signal.py`.
@@ -242,6 +247,7 @@ Fresh KDE Plasma (Wayland), XFCE (X11) and MATE (X11) QA:
 
 - [ ] Leave the machine untouched past two minutes; the away reaction plays, and a key press returns Mochi to active
 - [ ] A short typing burst in a text editor starts and stops the typing mirror
+- [ ] Typing in a GTK terminal (`xfce4-terminal`, `gnome-terminal`) starts the mirror; typing in Konsole does not, and `mochi --debug` names the backend that won
 - [ ] Drag Mochi near each screen edge; he stays inside the work area and relaunch puts him back
 - [ ] `Ctrl + Alt + E` does nothing off GNOME; the bound `mochi-emote-catalogue` shortcut opens the catalogue
 - [ ] On KDE Wayland, Mochi still drags and keeps position (XWayland path)

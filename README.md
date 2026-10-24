@@ -427,8 +427,13 @@ in the same local package with no extra dependency or network access.
 | Light / dark theme | portal | portal | portal (best effort) |
 | Emote Catalogue shortcut | `Ctrl + Alt + E` | `mochi-emote-catalogue` | `mochi-emote-catalogue` |
 
-Typing reactions off GNOME need the accessibility bus (AT-SPI). On KDE that is
-`kaccess`; on XFCE, MATE and Cinnamon it is usually already running.
+Typing reactions off GNOME need the accessibility bus (AT-SPI), which is usually
+already running on XFCE, MATE and Cinnamon; on KDE Plasma it comes from
+`kaccess`. The bus is only half of it: the application you type in must also
+expose itself to AT-SPI. GTK terminals such as `xfce4-terminal` and
+`gnome-terminal` do; Konsole does not, so typing there is not detected (see
+Known issues). `mochi --debug` logs which typing backend was selected and why
+the others were rejected.
 
 ### Opening the Emote Catalogue without GNOME
 
@@ -447,6 +452,11 @@ keyboard shortcut to the `mochi-emote-catalogue` command:
   a separate freeze can still occur when entering GNOME Overview or switching
   workspaces during some animations. The ordinary sticky-workspace/focus issue
   reported in #118 has been fixed.
+- **No typing reactions in Konsole (Qt) under KDE Plasma:** Konsole does not
+  publish an AT-SPI tree, so there is no anonymous activity for Mochi to
+  observe. It stays absent even with `QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1`.
+  Detecting typing there would require reading keystrokes, which Mochi never
+  does. Use a GTK terminal if you want typing reactions on Plasma.
 - Alpha behavior and compatibility can still change.
 
 Passing automated tests does not establish reliability across every compositor,
