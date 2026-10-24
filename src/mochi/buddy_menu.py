@@ -16,6 +16,7 @@ gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 from mochi.config import ConfigStore
+from mochi.i18n import tr
 from mochi.menu_window import MenuWindow
 from mochi.sound import SoundEvent
 from mochi.state import MochiState
@@ -149,7 +150,7 @@ class BuddyMenuController:
         title = Gtk.Label(label="Mochi")
         title.set_xalign(0)
         title.add_css_class("mochi-menu-title")
-        subtitle = Gtk.Label(label="your tiny desktop buddy")
+        subtitle = Gtk.Label(label=tr("your tiny desktop buddy"))
         subtitle.set_xalign(0)
         subtitle.add_css_class("mochi-menu-subtitle")
         header_text.append(title)
@@ -162,14 +163,14 @@ class BuddyMenuController:
         self._buddy._register_context_menu_row("separator", separator, animated=False)
 
         self._buddy._sleep_button, self._buddy._sleep_label = self._buddy._make_menu_button(
-            "Sleep",
+            tr("Sleep"),
             "weather-clear-night-symbolic",
             self._buddy._toggle_sleep,
         )
         self._buddy._register_context_menu_row("sleep", self._buddy._sleep_button)
 
         close_button, _ = self._buddy._make_menu_button(
-            "Close",
+            tr("Close"),
             "window-close-symbolic",
             self._buddy._quit_from_context_menu,
         )
@@ -202,12 +203,12 @@ class BuddyMenuController:
         drag_header = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
         drag_header.add_css_class("mochi-dev-drag-handle")
 
-        title = Gtk.Label(label="Mochi Lab  ✦")
+        title = Gtk.Label(label=tr("Mochi Lab  ✦"))
         title.set_xalign(0)
         title.add_css_class("mochi-menu-title")
         drag_header.append(title)
 
-        subtitle = Gtk.Label(label="Developer controls  ·  drag here to move")
+        subtitle = Gtk.Label(label=tr("Developer controls  ·  drag here to move"))
         subtitle.set_xalign(0)
         subtitle.add_css_class("mochi-menu-subtitle")
         drag_header.append(subtitle)
@@ -217,25 +218,25 @@ class BuddyMenuController:
         animated_rows: list[Gtk.Widget] = []
         card.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
 
-        actions_label = Gtk.Label(label="Actions")
+        actions_label = Gtk.Label(label=tr("Actions"))
         actions_label.set_xalign(0)
         actions_label.add_css_class("mochi-menu-section")
         card.append(actions_label)
 
-        walk_button, _ = self._buddy._make_menu_button("Take a stroll", "go-next-symbolic", self._buddy._test_walk)
+        walk_button, _ = self._buddy._make_menu_button(tr("Take a stroll"), "go-next-symbolic", self._buddy._test_walk)
         card.append(walk_button)
         animated_rows.append(walk_button)
 
-        heart_button, _ = self._buddy._make_menu_button("Say hi", "emblem-favorite-symbolic", self._buddy._test_heart_emote)
+        heart_button, _ = self._buddy._make_menu_button(tr("Say hi"), "emblem-favorite-symbolic", self._buddy._test_heart_emote)
         card.append(heart_button)
         animated_rows.append(heart_button)
 
-        computer_button, _ = self._buddy._make_menu_button("Laptop time", "computer-symbolic", self._buddy._test_computer_emote)
+        computer_button, _ = self._buddy._make_menu_button(tr("Laptop time"), "computer-symbolic", self._buddy._test_computer_emote)
         card.append(computer_button)
         animated_rows.append(computer_button)
 
         nap_button, _ = self._buddy._make_menu_button(
-            "Test autonomous nap",
+            tr("Test autonomous nap"),
             "weather-clear-night-symbolic",
             self._buddy._test_autonomous_nap,
         )
@@ -244,14 +245,14 @@ class BuddyMenuController:
 
         card.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
 
-        appearance_label = Gtk.Label(label="Appearance")
+        appearance_label = Gtk.Label(label=tr("Appearance"))
         appearance_label.set_xalign(0)
         appearance_label.add_css_class("mochi-menu-section")
         card.append(appearance_label)
 
         size_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         size_row.add_css_class("mochi-setting-row")
-        size_label = Gtk.Label(label="Size")
+        size_label = Gtk.Label(label=tr("Size"))
         size_label.set_xalign(0)
         size_label.set_hexpand(True)
         size_row.append(size_label)
@@ -280,7 +281,7 @@ class BuddyMenuController:
 
         card.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
 
-        audio_label = Gtk.Label(label="Audio")
+        audio_label = Gtk.Label(label=tr("Audio"))
         audio_label.set_xalign(0)
         audio_label.add_css_class("mochi-menu-section")
         card.append(audio_label)
@@ -289,7 +290,7 @@ class BuddyMenuController:
         sound_row.add_css_class("mochi-setting-row")
         sound_icon = Gtk.Image.new_from_icon_name("audio-volume-high-symbolic")
         sound_row.append(sound_icon)
-        sound_label = Gtk.Label(label="Sound")
+        sound_label = Gtk.Label(label=tr("Sound"))
         sound_label.set_xalign(0)
         sound_label.set_hexpand(True)
         sound_row.append(sound_label)
@@ -311,7 +312,7 @@ class BuddyMenuController:
 
         card.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
 
-        tuning_label = Gtk.Label(label="Interaction tuning")
+        tuning_label = Gtk.Label(label=tr("Interaction tuning"))
         tuning_label.set_xalign(0)
         tuning_label.add_css_class("mochi-menu-section")
         card.append(tuning_label)
@@ -319,14 +320,14 @@ class BuddyMenuController:
         tuning_grid = Gtk.Grid(column_spacing=12, row_spacing=6)
         tuning_grid.add_css_class("mochi-tuning-grid")
         tuning_values = (
-            ("Start drag px", "drag_start_distance_px", 1.0, 12.0, 0.5, 1),
-            ("Soft threshold", "drag_soft_enter_threshold", 0.0, 1.0, 0.01, 2),
-            ("Medium enter", "drag_medium_enter_threshold", 0.0, 1.0, 0.01, 2),
-            ("Medium exit", "drag_medium_exit_threshold", 0.0, 1.0, 0.01, 2),
-            ("Full-sway px/s", "drag_heavy_velocity_px_per_second", 100.0, 2_000.0, 25.0, 0),
-            ("Drag dwell ms", "drag_state_dwell_ms", 0.0, 250.0, 10.0, 0),
-            ("Heart cooldown s", "hover_heart_cooldown_seconds", 0.0, 10.0, 0.25, 2),
-            ("Pickup frame ms", "pickup_frame_duration_ms", 10.0, 100.0, 5.0, 0),
+            (tr("Start drag px"), "drag_start_distance_px", 1.0, 12.0, 0.5, 1),
+            (tr("Soft threshold"), "drag_soft_enter_threshold", 0.0, 1.0, 0.01, 2),
+            (tr("Medium enter"), "drag_medium_enter_threshold", 0.0, 1.0, 0.01, 2),
+            (tr("Medium exit"), "drag_medium_exit_threshold", 0.0, 1.0, 0.01, 2),
+            (tr("Full-sway px/s"), "drag_heavy_velocity_px_per_second", 100.0, 2_000.0, 25.0, 0),
+            (tr("Drag dwell ms"), "drag_state_dwell_ms", 0.0, 250.0, 10.0, 0),
+            (tr("Heart cooldown s"), "hover_heart_cooldown_seconds", 0.0, 10.0, 0.25, 2),
+            (tr("Pickup frame ms"), "pickup_frame_duration_ms", 10.0, 100.0, 5.0, 0),
         )
         for row, values in enumerate(tuning_values):
             label, attribute, lower, upper, step, digits = values
@@ -336,16 +337,16 @@ class BuddyMenuController:
 
         card.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
 
-        system_label = Gtk.Label(label="System")
+        system_label = Gtk.Label(label=tr("System"))
         system_label.set_xalign(0)
         system_label.add_css_class("mochi-menu-section")
         card.append(system_label)
 
-        reset_button, _ = self._buddy._make_menu_button("Reset position", "view-refresh-symbolic", self._buddy._reset_position)
+        reset_button, _ = self._buddy._make_menu_button(tr("Reset position"), "view-refresh-symbolic", self._buddy._reset_position)
         card.append(reset_button)
         animated_rows.append(reset_button)
 
-        quit_button, _ = self._buddy._make_menu_button("Quit Mochi", "application-exit-symbolic", self._buddy._quit, destructive=True)
+        quit_button, _ = self._buddy._make_menu_button(tr("Quit Mochi"), "application-exit-symbolic", self._buddy._quit, destructive=True)
         card.append(quit_button)
         animated_rows.append(quit_button)
 
@@ -478,7 +479,7 @@ class BuddyMenuController:
         # after this presentation path has established menu ownership.
         self._buddy._cancel_hover_heart()
         self._buddy._sleep_label.set_text(
-            "Wake up" if self._buddy.state.current is MochiState.SLEEPING else "Sleep"
+            tr("Wake up") if self._buddy.state.current is MochiState.SLEEPING else tr("Sleep")
         )
         # Anchor the menu to Mochi's full sprite bounds rather than the exact
         # click point. MenuWindow can then keep the entire menu beside Mochi

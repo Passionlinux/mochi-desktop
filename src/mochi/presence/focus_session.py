@@ -13,6 +13,7 @@ gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 from mochi.focus import FocusAdvance, FocusPhase, FocusPlan, FocusSession
+from mochi.i18n import tr, trf
 from mochi.menu_window import _window_coordinate_scale, menu_position_for_anchor
 from mochi.sound import FocusAmbienceManager
 from mochi.sprites import ANIMATIONS
@@ -205,7 +206,7 @@ class FocusWindow:
             # relationship with Mochi's always-on-top buddy window. A Focus
             # session is a long-lived app surface, not a dialog owned by Mochi.
             self.window = Gtk.Window()
-        self.window.set_title("Focus with Mochi 🌱")
+        self.window.set_title(tr("Focus with Mochi 🌱"))
         self.window.set_modal(False)
         self.window.set_hide_on_close(True)
         self.window.set_resizable(False)
@@ -234,18 +235,18 @@ class FocusWindow:
         root.set_margin_start(18)
         root.set_margin_end(18)
 
-        kicker = Gtk.Label(label="WORK WITH MOCHI")
+        kicker = Gtk.Label(label=tr("WORK WITH MOCHI"))
         kicker.set_xalign(0)
         kicker.add_css_class("mochi-focus-kicker")
         root.append(kicker)
 
-        title = Gtk.Label(label="Focus with Mochi")
+        title = Gtk.Label(label=tr("Focus with Mochi"))
         title.set_xalign(0)
         title.add_css_class("mochi-focus-title")
         root.append(title)
 
         subtitle = Gtk.Label(
-            label="A gentle focus timer. Your bond grows as you focus."
+            label=tr("A gentle focus timer. Your bond grows as you focus.")
         )
         subtitle.set_xalign(0)
         subtitle.set_wrap(True)
@@ -269,7 +270,7 @@ class FocusWindow:
 
         self._focus_minutes = self._spin_row(
             card,
-            "Focus",
+            tr("Focus"),
             minimum=5,
             maximum=120,
             value=25,
@@ -277,7 +278,7 @@ class FocusWindow:
         )
         self._break_minutes = self._spin_row(
             card,
-            "Break",
+            tr("Break"),
             minimum=1,
             maximum=30,
             value=5,
@@ -285,7 +286,7 @@ class FocusWindow:
         )
         self._rounds = self._spin_row(
             card,
-            "Rounds",
+            tr("Rounds"),
             minimum=1,
             maximum=8,
             value=4,
@@ -293,7 +294,7 @@ class FocusWindow:
         )
 
         encourage_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        encourage_label = Gtk.Label(label="Gentle encouragement")
+        encourage_label = Gtk.Label(label=tr("Gentle encouragement"))
         encourage_label.set_xalign(0)
         encourage_label.set_hexpand(True)
         encourage_row.append(encourage_label)
@@ -311,14 +312,14 @@ class FocusWindow:
             ))
 
         note = Gtk.Label(
-            label="Focus time earns bond XP. Breaks are yours — Mochi does not grade them."
+            label=tr("Focus time earns bond XP. Breaks are yours — Mochi does not grade them.")
         )
         note.set_xalign(0)
         note.set_wrap(True)
         note.add_css_class("mochi-focus-secondary")
         card.append(note)
 
-        start = Gtk.Button(label="Start focusing")
+        start = Gtk.Button(label=tr("Start focusing"))
         start.add_css_class("mochi-focus-primary")
         start.connect("clicked", self._on_start_clicked)
         card.append(start)
@@ -329,7 +330,7 @@ class FocusWindow:
         card.add_css_class("mochi-focus-card")
         card.set_margin_top(4)
 
-        self._phase_label = Gtk.Label(label="Focus 1 of 4")
+        self._phase_label = Gtk.Label(label=trf("Focus {current} of {total}", current=1, total=4))
         self._phase_label.set_xalign(0)
         self._phase_label.add_css_class("mochi-focus-secondary")
         card.append(self._phase_label)
@@ -343,7 +344,7 @@ class FocusWindow:
         self._progress.set_show_text(False)
         card.append(self._progress)
 
-        self._earned_label = Gtk.Label(label="0 focused minutes together")
+        self._earned_label = Gtk.Label(label=tr("0 focused minutes together"))
         self._earned_label.set_xalign(0)
         self._earned_label.add_css_class("mochi-focus-secondary")
         card.append(self._earned_label)
@@ -351,12 +352,12 @@ class FocusWindow:
         actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         actions.set_homogeneous(True)
 
-        self._pause_button = Gtk.Button(label="Pause")
+        self._pause_button = Gtk.Button(label=tr("Pause"))
         self._pause_button.add_css_class("mochi-focus-secondary-button")
         self._pause_button.connect("clicked", self._on_pause_clicked)
         actions.append(self._pause_button)
 
-        self._cancel_button = Gtk.Button(label="Stop session")
+        self._cancel_button = Gtk.Button(label=tr("Stop session"))
         self._cancel_button.add_css_class("mochi-focus-secondary-button")
         self._cancel_button.connect("clicked", self._on_cancel_clicked)
         actions.append(self._cancel_button)
@@ -371,7 +372,7 @@ class FocusWindow:
             ))
 
         hint = Gtk.Label(
-            label="You can close this window. The timer keeps going with Mochi."
+            label=tr("You can close this window. The timer keeps going with Mochi.")
         )
         hint.set_xalign(0)
         hint.set_wrap(True)
@@ -396,7 +397,7 @@ class FocusWindow:
     def _soundscape_row(self, toggle: Gtk.Switch, volume: Gtk.Scale) -> Gtk.Box:
         row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        label = Gtk.Label(label="Rain sounds")
+        label = Gtk.Label(label=tr("Rain sounds"))
         label.set_xalign(0)
         label.set_hexpand(True)
         header.append(label)
@@ -404,7 +405,7 @@ class FocusWindow:
         row.append(header)
 
         volume_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        volume_label = Gtk.Label(label="Rain volume")
+        volume_label = Gtk.Label(label=tr("Rain volume"))
         volume_label.set_xalign(0)
         volume_label.add_css_class("mochi-focus-secondary")
         volume_row.append(volume_label)
@@ -462,13 +463,18 @@ class FocusWindow:
         self._timer_label.set_text(session.remaining_label)
         self._progress.set_fraction(session.progress_fraction)
         self._earned_label.set_text(
-            f"{session.focus_minutes_completed} focused minutes together"
+            tr("1 focused minute together")
+            if session.focus_minutes_completed == 1
+            else trf(
+                "{minutes} focused minutes together",
+                minutes=session.focus_minutes_completed,
+            )
         )
 
         complete = session.phase is FocusPhase.COMPLETE
         self._pause_button.set_sensitive(not complete)
-        self._pause_button.set_label("Resume" if session.paused else "Pause")
-        self._cancel_button.set_label("Done" if complete else "Stop session")
+        self._pause_button.set_label(tr("Resume") if session.paused else tr("Pause"))
+        self._cancel_button.set_label(tr("Done") if complete else tr("Stop session"))
         self._sync_rain_controls()
 
     def _present_beside_owner(self) -> None:
@@ -635,11 +641,11 @@ class FocusSessionMixin:
     def _build_context_menu(self):
         menu = super()._build_context_menu()
         button, _ = self._make_menu_button(
-            "Focus with Mochi",
+            tr("Focus with Mochi"),
             "alarm-symbolic",
             self._show_focus_from_context_menu,
         )
-        button.set_tooltip_text("Start a gentle focus session with Mochi")
+        button.set_tooltip_text(tr("Start a gentle focus session with Mochi"))
         self._register_context_menu_row(
             "focus",
             button,

@@ -134,6 +134,13 @@ def bootstrap_updater(
         package_root.mkdir(parents=True, exist_ok=True)
         (package_root / "__init__.py").write_text("", encoding="utf-8")
         shutil.copytree(selected_source, update_destination)
+        # The updater window translates its copy through Mochi's small
+        # standalone catalogue. Copy those two dependency-free modules next to
+        # the updater so the bootstrap package never imports the rest of Mochi.
+        for module_name in ("i18n.py", "locale_fr.py"):
+            module_source = selected_source.parent / module_name
+            if module_source.is_file():
+                shutil.copy2(module_source, package_root / module_name)
 
         copied_asset_root = workspace / "assets" / "mochi"
         copied_asset_root.mkdir(parents=True, exist_ok=True)

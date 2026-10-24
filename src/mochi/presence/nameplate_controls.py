@@ -36,6 +36,7 @@ import time
 
 from gi.repository import Gtk
 
+from mochi.i18n import tr
 from mochi.mood import MochiMood, MoodModel
 from mochi.mood_behavior import behavior_profile_for, resolve_mood_animation
 from mochi.state import MochiState
@@ -105,17 +106,17 @@ class NameplateMixin:
         status_block = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
         status_block.set_can_target(False)
 
-        title = Gtk.Label(label="Mochi status")
+        title = Gtk.Label(label=tr("Mochi status"))
         title.set_xalign(0)
         title.set_can_target(False)
         title.add_css_class("mochi-menu-section")
         status_block.append(title)
 
         state_row, self._context_state_value = self._make_context_status_row(
-            "MochiState"
+            tr("MochiState")
         )
         status_block.append(state_row)
-        mood_row, self._context_mood_value = self._make_context_status_row("Mood")
+        mood_row, self._context_mood_value = self._make_context_status_row(tr("Mood"))
         status_block.append(mood_row)
 
         self._register_context_menu_row(
@@ -151,7 +152,7 @@ class NameplateMixin:
         """Refresh the read-only state/mood snapshot displayed by right-click."""
         state = getattr(getattr(self, "state", None), "current", None)
         state_text = state.name if isinstance(state, MochiState) else "UNKNOWN"
-        mood_text = self._nameplate_mood or "—"
+        mood_text = tr(self._nameplate_mood) if self._nameplate_mood else "—"
 
         if self._context_state_value is not None:
             self._context_state_value.set_text(state_text)

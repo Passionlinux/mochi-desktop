@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from gi.repository import GLib
 
+from mochi.i18n import tr
 from mochi.music_activity import MusicActivityMonitor
 from mochi.sprites import ANIMATIONS
 from mochi.state import MochiState
@@ -41,7 +42,7 @@ class MusicDanceMixin:
         """Expose a manual Dance action in Mochi Lab for animation testing."""
         popover = super()._build_developer_menu()
         dance_button, _ = self._make_menu_button(
-            "Dance",
+            tr("Dance"),
             "media-playback-start-symbolic",
             self._test_dance_emote,
         )

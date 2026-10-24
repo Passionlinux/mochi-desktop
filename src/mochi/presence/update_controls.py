@@ -7,6 +7,7 @@ import threading
 
 from gi.repository import GLib, Gtk
 
+from mochi.i18n import tr
 from mochi.update.bootstrap import bootstrap_updater
 from mochi.update.checker import GitHubUpdateSource, UpdateChecker
 from mochi.update.model import UpdateCheckResult, UpdateStatus, UpdateTarget
@@ -49,7 +50,7 @@ class UpdateControlsMixin:
     def _build_context_menu(self):
         menu = super()._build_context_menu()
         button, self._update_menu_label = self._make_menu_button(
-            "Check for updates",
+            tr("Check for updates"),
             "software-update-available-symbolic",
             self._on_update_menu_clicked,
         )
@@ -118,7 +119,7 @@ class UpdateControlsMixin:
         if result.status is UpdateStatus.UPDATE_AVAILABLE and result.target is not None:
             self._update_target = result.target
             if self._update_menu_label is not None:
-                self._update_menu_label.set_text("Update available")
+                self._update_menu_label.set_text(tr("Update available"))
 
             if (
                 result.announce
@@ -152,7 +153,7 @@ class UpdateControlsMixin:
         if manual:
             window = self._get_update_window()
             window.show_failure(
-                "Couldn’t check for updates.",
+                tr("Couldn’t check for updates."),
                 result.error or "Update check failed without additional details.",
             )
             window.present()

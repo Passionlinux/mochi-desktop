@@ -13,6 +13,7 @@ from gi.repository import Gio, GLib, Gtk  # noqa: E402
 from mochi.agent_activity import AGENT_EVENTS, AGENT_TOKEN_PATTERN
 from mochi.color_scheme import SystemColorSchemeSync
 from mochi.config import ConfigStore
+from mochi.i18n import tr
 from mochi.presence.click_dialogue import PresenceBuddy, PresenceX11Buddy
 from mochi.sound import SoundEvent, SoundManager
 from mochi.windowing import WindowPlacement
@@ -88,7 +89,9 @@ class MochiApplication(Gtk.Application):
 
         window = Gtk.ApplicationWindow(application=self)
         window.add_css_class("mochi-buddy-window")
-        window.set_title("Mochi Animation Preview" if self.preview_animations else "Mochi")
+        window.set_title(
+            tr("Mochi Animation Preview") if self.preview_animations else "Mochi"
+        )
         window.set_decorated(False)
         window.set_resizable(False)
         window.set_focusable(False)

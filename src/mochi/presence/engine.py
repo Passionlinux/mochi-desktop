@@ -9,6 +9,8 @@ import logging
 import random
 import time
 
+from mochi.i18n import tr
+
 from .context import AmbientContext, TypingIntensity
 from .cooldowns import CooldownTracker
 from .phrases import EVENT_PHRASES, PhraseBank
@@ -156,7 +158,9 @@ _TRANSIENT_EVENT_STATES = {
 
 
 def speech_display_seconds(text: str) -> float:
-    length = len(text.strip())
+    # Measure the copy the user actually reads, so longer French phrases keep
+    # their full reading time instead of being measured in English.
+    length = len(tr(text).strip())
     if length <= 28:
         return 3.5
     if length <= 52:

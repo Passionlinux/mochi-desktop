@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 import math
 
+from mochi.i18n import tr, trf
+
 
 MIN_FOCUS_MINUTES = 5
 MAX_FOCUS_MINUTES = 120
@@ -133,10 +135,18 @@ class FocusSession:
     @property
     def phase_label(self) -> str:
         if self.phase is FocusPhase.FOCUS:
-            return f"Focus {self.round_number} of {self.plan.rounds}"
+            return trf(
+                "Focus {current} of {total}",
+                current=self.round_number,
+                total=self.plan.rounds,
+            )
         if self.phase is FocusPhase.BREAK:
-            return f"Break {self.round_number} of {self.plan.rounds}"
-        return "Complete"
+            return trf(
+                "Break {current} of {total}",
+                current=self.round_number,
+                total=self.plan.rounds,
+            )
+        return tr("Complete")
 
     def set_paused(self, paused: bool) -> None:
         if self.active:

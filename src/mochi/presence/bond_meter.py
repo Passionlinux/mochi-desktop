@@ -25,6 +25,7 @@ from mochi.emotes import (
     unlocked_emote_animation_names,
 )
 from mochi.focus import FocusPhase
+from mochi.i18n import tr, trf
 from mochi.sprites import ANIMATIONS
 from mochi.state import MochiState, PresentationState
 
@@ -136,7 +137,7 @@ class BondMeterMixin:
         return row
 
     def _bond_label_text(self) -> str:
-        return f"Bond Lv. {self._bond_state.level}"
+        return trf("Bond Lv. {level}", level=self._bond_state.level)
 
     def _set_bond_state_for_ui(self, state: BondState) -> None:
         self._bond_state = BondState(level=state.level, xp=state.xp)
@@ -155,11 +156,13 @@ class BondMeterMixin:
             self._bond_progress_overlay.update(self._bond_state)
 
     def _bond_dev_status_text(self) -> str:
-        suffix = "  ·  EMOTES UNLOCKED (DEV)" if self._dev_unlock_all_emotes else ""
-        return (
-            f"Lv. {self._bond_state.level}  ·  "
-            f"{self._bond_state.xp}/{self._bond_state.xp_required} XP"
-            f"{suffix}"
+        suffix = tr("  ·  EMOTES UNLOCKED (DEV)") if self._dev_unlock_all_emotes else ""
+        return trf(
+            "Lv. {level}  ·  {xp}/{required} XP{suffix}",
+            level=self._bond_state.level,
+            xp=self._bond_state.xp,
+            required=self._bond_state.xp_required,
+            suffix=suffix,
         )
 
     def _build_developer_menu(self):
@@ -170,14 +173,14 @@ class BondMeterMixin:
 
         card.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
 
-        label = Gtk.Label(label="Bond testing")
+        label = Gtk.Label(label=tr("Bond testing"))
         label.set_xalign(0)
         label.add_css_class("mochi-menu-section")
         card.append(label)
 
         status_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         status_row.add_css_class("mochi-setting-row")
-        status_title = Gtk.Label(label="Current bond")
+        status_title = Gtk.Label(label=tr("Current bond"))
         status_title.set_xalign(0)
         status_title.set_hexpand(True)
         status_row.append(status_title)
@@ -189,57 +192,59 @@ class BondMeterMixin:
         animated_rows.append(status_row)
 
         award_button, _ = self._make_menu_button(
-            "Award +1 XP",
+            tr("Award +1 XP"),
             "list-add-symbolic",
             self._test_bond_award_one,
         )
         award_button.set_tooltip_text(
-            f"Awards one real bond XP; saves every {BOND_PERSIST_INTERVAL_XP} XP, "
-            "on level-up, and on exit"
+            trf(
+                "Awards one real bond XP; saves every {interval} XP, on level-up, and on exit",
+                interval=BOND_PERSIST_INTERVAL_XP,
+            )
         )
         card.append(award_button)
         animated_rows.append(award_button)
 
         spam_button, _ = self._make_menu_button(
-            "Stress +1 XP ×50",
+            tr("Stress +1 XP ×50"),
             "media-seek-forward-symbolic",
             self._test_bond_spam_awards,
         )
         spam_button.set_tooltip_text(
-            "Runs 50 rapid real +1 XP awards through the Dev Menu path"
+            tr("Runs 50 rapid real +1 XP awards through the Dev Menu path")
         )
         card.append(spam_button)
         animated_rows.append(spam_button)
 
         swarm_button, _ = self._make_menu_button(
-            "Preview 60 XP swarm",
+            tr("Preview 60 XP swarm"),
             "weather-clear-symbolic",
             self._test_bond_swarm,
         )
         swarm_button.set_tooltip_text(
-            "Visual-only dense particle test; does not change saved bond XP"
+            tr("Visual-only dense particle test; does not change saved bond XP")
         )
         card.append(swarm_button)
         animated_rows.append(swarm_button)
 
         card_button, _ = self._make_menu_button(
-            "Preview level-up card",
+            tr("Preview level-up card"),
             "emblem-favorite-symbolic",
             self._test_bond_level_up_card,
         )
         card_button.set_tooltip_text(
-            "Visual-only preview of the next bond level celebration"
+            tr("Visual-only preview of the next bond level celebration")
         )
         card.append(card_button)
         animated_rows.append(card_button)
 
         real_level_button, _ = self._make_menu_button(
-            "Trigger real level-up",
+            tr("Trigger real level-up"),
             "go-up-symbolic",
             self._test_bond_real_level_up,
         )
         real_level_button.set_tooltip_text(
-            "Moves to one XP before the next level, then awards the final XP"
+            tr("Moves to one XP before the next level, then awards the final XP")
         )
         card.append(real_level_button)
         animated_rows.append(real_level_button)
@@ -247,34 +252,34 @@ class BondMeterMixin:
         preview_dialogue = getattr(self, "_preview_bond_dialogue", None)
         if callable(preview_dialogue):
             dialogue_button, _ = self._make_menu_button(
-                "Preview bond dialogue",
+                tr("Preview bond dialogue"),
                 "chat-bubble-text-symbolic",
                 preview_dialogue,
             )
             dialogue_button.set_tooltip_text(
-                "Visual-only preview of dialogue for the current bond level"
+                tr("Visual-only preview of dialogue for the current bond level")
             )
             card.append(dialogue_button)
             animated_rows.append(dialogue_button)
 
         unlock_button, self._dev_unlock_all_label = self._make_menu_button(
-            "Unlock all emotes",
+            tr("Unlock all emotes"),
             "changes-allow-symbolic",
             self._test_unlock_all_emotes,
         )
         unlock_button.set_tooltip_text(
-            "Session-only QA override; does not change saved bond level or XP"
+            tr("Session-only QA override; does not change saved bond level or XP")
         )
         card.append(unlock_button)
         animated_rows.append(unlock_button)
 
         reset_button, _ = self._make_menu_button(
-            "Reset test bond",
+            tr("Reset test bond"),
             "edit-undo-symbolic",
             self._test_bond_reset,
         )
         reset_button.set_tooltip_text(
-            "Resets saved bond progress to Level 1 with 0 XP"
+            tr("Resets saved bond progress to Level 1 with 0 XP")
         )
         card.append(reset_button)
         animated_rows.append(reset_button)
@@ -330,9 +335,9 @@ class BondMeterMixin:
         self._dev_unlock_all_emotes = not self._dev_unlock_all_emotes
         if self._dev_unlock_all_label is not None:
             self._dev_unlock_all_label.set_text(
-                "Restore bond locks"
+                tr("Restore bond locks")
                 if self._dev_unlock_all_emotes
-                else "Unlock all emotes"
+                else tr("Unlock all emotes")
             )
         if self._bond_dev_status_label is not None:
             self._bond_dev_status_label.set_text(self._bond_dev_status_text())
@@ -828,7 +833,8 @@ class BondMeterMixin:
         context.save()
         context.select_font_face("Sans")
         context.set_font_size(label_size)
-        extents = context.text_extents(FOCUS_BOND_LABEL)
+        label_text = tr(FOCUS_BOND_LABEL)
+        extents = context.text_extents(label_text)
         if hasattr(extents, "width"):
             text_width = float(extents.width)
             x_bearing = float(getattr(extents, "x_bearing", 0.0))
@@ -839,7 +845,7 @@ class BondMeterMixin:
         label_y = max(label_size, y - label_gap)
         context.set_source_rgba(0.78, 0.92, 0.80, 0.94)
         context.move_to(label_x, label_y)
-        context.show_text(FOCUS_BOND_LABEL)
+        context.show_text(label_text)
         context.restore()
 
         # Track: subtle enough to read as context, not a second HUD.

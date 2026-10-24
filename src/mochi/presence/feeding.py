@@ -6,6 +6,7 @@ import time
 
 from gi.repository import Gtk
 
+from mochi.i18n import tr
 from mochi.sound import SoundEvent
 from mochi.state import MochiState
 
@@ -29,7 +30,7 @@ class FeedMochiMixin:
     def _build_context_menu(self):
         menu = super()._build_context_menu()
         feed_button, _ = self._make_menu_button(
-            "Feed",
+            tr("Feed"),
             "emblem-favorite-symbolic",
             self._feed_from_context_menu,
         )

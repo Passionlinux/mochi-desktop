@@ -14,6 +14,7 @@ from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 from mochi.care import BondState
 from mochi.emotes import EmoteDefinition
+from mochi.i18n import tr, trf
 from mochi.sprites import ANIMATIONS, SpriteAtlas
 from mochi.x11 import get_window_position, move_window, request_keep_above
 
@@ -190,14 +191,14 @@ class BondProgressOverlay:
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         header.set_can_target(False)
 
-        level = Gtk.Label(label="Bond Lv. 1")
+        level = Gtk.Label(label=tr("Bond Lv. 1"))
         level.set_xalign(0)
         level.set_hexpand(True)
         level.set_can_target(False)
         level.add_css_class("mochi-bond-level")
         header.append(level)
 
-        activity = Gtk.Label(label="bonding")
+        activity = Gtk.Label(label=tr("bonding"))
         activity.set_xalign(1)
         activity.set_can_target(False)
         activity.add_css_class("mochi-bond-activity")
@@ -252,7 +253,7 @@ class BondProgressOverlay:
         # This is Mochi's one-off reaction to a real milestone, not a recurring
         # tier phrase bank. Keeping it in the existing presentation card makes
         # the line readable without competing with the speech bubble surface.
-        level_up_subtitle = Gtk.Label(label=LEVEL_UP_REACTION_LINE)
+        level_up_subtitle = Gtk.Label(label=tr(LEVEL_UP_REACTION_LINE))
         level_up_subtitle.set_halign(Gtk.Align.CENTER)
         level_up_subtitle.set_can_target(False)
         level_up_subtitle.add_css_class("mochi-level-up-subtitle")
@@ -335,9 +336,9 @@ class BondProgressOverlay:
         self._level_up_previous_level = previous_level
         self._active = True
         for label in (self._level_up_title, self._popover_level_up_title):
-            label.set_text("✦  LEVEL UP!  ✦")
+            label.set_text(tr("✦  LEVEL UP!  ✦"))
         for label in (self._level_up_subtitle, self._popover_level_up_subtitle):
-            label.set_text(LEVEL_UP_REACTION_LINE)
+            label.set_text(tr(LEVEL_UP_REACTION_LINE))
         for preview in self._unlock_previews:
             preview.set_emote(None)
         self._set_level_up_content(True)
@@ -363,12 +364,13 @@ class BondProgressOverlay:
         self._set_level_up_highlight(True)
 
         for label in (self._level_up_title, self._popover_level_up_title):
-            label.set_text("✦  NEW EMOTE UNLOCKED!  ✦")
+            label.set_text(tr("✦  NEW EMOTE UNLOCKED!  ✦"))
         for label in (self._level_up_level, self._popover_level_up_level):
-            label.set_text(emote.label)
-        subtitle = (
-            f"{emote.rarity.upper()} · Bond Lv. {emote.required_bond_level} · "
-            "now part of Mochi's idle moods"
+            label.set_text(tr(emote.label))
+        subtitle = trf(
+            "{rarity} · Bond Lv. {level} · now part of Mochi's idle moods",
+            rarity=tr(emote.rarity.upper()),
+            level=emote.required_bond_level,
         )
         for label in (self._level_up_subtitle, self._popover_level_up_subtitle):
             label.set_text(subtitle)
@@ -386,13 +388,13 @@ class BondProgressOverlay:
         if activity is not None:
             self._activity = activity.strip() or "bonding"
 
-        level_text = f"Bond Lv. {self._state.level}"
-        activity_text = self._activity
-        xp_text = f"{self._state.xp} / {self._state.xp_required} XP"
+        level_text = trf("Bond Lv. {level}", level=self._state.level)
+        activity_text = tr(self._activity)
+        xp_text = trf("{xp} / {required} XP", xp=self._state.xp, required=self._state.xp_required)
         gain_text = self._gain_text
 
         if not self._emote_unlock_active:
-            level_up_level_text = f"Bond Level {self._state.level}"
+            level_up_level_text = trf("Bond Level {level}", level=self._state.level)
             for label in (self._level_up_level, self._popover_level_up_level):
                 label.set_text(level_up_level_text)
 

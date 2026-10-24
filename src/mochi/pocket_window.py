@@ -13,6 +13,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gio, GLib, Gtk  # noqa: E402
 
+from mochi.i18n import current_language, tr, trf
 from mochi.pocket import PocketItem, PocketItemKind, item_is_available
 from mochi.pocket_controller import PocketController
 
@@ -56,27 +57,28 @@ class PocketRowWidgets:
 
 def row_model(item: PocketItem) -> PocketRowModel:
     available = item_is_available(item)
-    received = datetime.fromtimestamp(item.received_at).strftime("%I:%M %p").lstrip("0")
+    time_format = "%H:%M" if current_language() == "fr" else "%I:%M %p"
+    received = datetime.fromtimestamp(item.received_at).strftime(time_format).lstrip("0")
     if item.kind is PocketItemKind.LOCAL_FILE:
         path = Path(item.value)
         subtitle = f"{path.parent} · {received}"
         icon = "text-x-generic-symbolic"
-        action = "Open"
+        action = tr("Open")
     elif item.kind is PocketItemKind.SAVED_IMAGE:
-        subtitle = f"Dropped image · {received}"
+        subtitle = trf("Dropped image · {time}", time=received)
         icon = "image-x-generic-symbolic"
-        action = "Open"
+        action = tr("Open")
     elif item.kind is PocketItemKind.URL:
         host = urlsplit(item.value).hostname or item.display_name
         subtitle = f"{host} · {received}"
         icon = "web-browser-symbolic"
-        action = "Open"
+        action = tr("Open")
     else:
-        subtitle = f"Text · {received}"
+        subtitle = trf("Text · {time}", time=received)
         icon = "accessories-text-editor-symbolic"
-        action = "View"
+        action = tr("View")
     if not available:
-        subtitle = f"Unavailable · {subtitle}"
+        subtitle = trf("Unavailable · {subtitle}", subtitle=subtitle)
     return PocketRowModel(
         item_id=item.id,
         title=item.display_name,
@@ -141,7 +143,7 @@ class PocketClearDialog(Gtk.Window):
         parent: Gtk.Window,
         on_response: Callable[["PocketClearDialog", bool], None],
     ) -> None:
-        super().__init__(title="Clear Pocket?")
+        super().__init__(title=tr("Clear Pocket?"))
         self.set_transient_for(parent)
         self.set_modal(True)
         self.set_resizable(False)
@@ -157,7 +159,7 @@ class PocketClearDialog(Gtk.Window):
         self.set_child(content)
 
         message = Gtk.Label(
-            label=(
+            label=tr(
                 "Remove everything from Pocket? "
                 "Original files on your computer will not be deleted."
             )
@@ -170,11 +172,11 @@ class PocketClearDialog(Gtk.Window):
         actions.set_halign(Gtk.Align.END)
         content.append(actions)
 
-        self.cancel_button = Gtk.Button(label="Cancel")
+        self.cancel_button = Gtk.Button(label=tr("Cancel"))
         self.cancel_button.connect("clicked", lambda _button: self.respond(False))
         actions.append(self.cancel_button)
 
-        self.clear_button = Gtk.Button(label="Clear All")
+        self.clear_button = Gtk.Button(label=tr("Clear All"))
         self.clear_button.add_css_class("destructive-action")
         self.clear_button.connect("clicked", lambda _button: self.respond(True))
         actions.append(self.clear_button)
@@ -203,7 +205,7 @@ class PocketWindow(Gtk.Window):
         *,
         launcher: Callable[[str], None] = _launch_default,
     ) -> None:
-        super().__init__(title="Mochi Pocket")
+        super().__init__(title=tr("Mochi Pocket"))
         self.set_default_size(500, 520)
         self.set_resizable(True)
         self.set_hide_on_close(True)
@@ -225,19 +227,19 @@ class PocketWindow(Gtk.Window):
         header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         card.append(header)
 
-        title = Gtk.Label(label="Pocket")
+        title = Gtk.Label(label=tr("Pocket"))
         title.set_xalign(0)
         title.set_hexpand(True)
         title.add_css_class("mochi-pocket-title")
         header.append(title)
 
-        self.clear_button = Gtk.Button(label="Clear All")
+        self.clear_button = Gtk.Button(label=tr("Clear All"))
         self.clear_button.add_css_class("destructive-action")
-        self.clear_button.set_tooltip_text("Remove everything from Pocket")
+        self.clear_button.set_tooltip_text(tr("Remove everything from Pocket"))
         self.clear_button.connect("clicked", self._request_clear_all)
         header.append(self.clear_button)
 
-        subtitle = Gtk.Label(label="The latest things Mochi is holding for you.")
+        subtitle = Gtk.Label(label=tr("The latest things Mochi is holding for you."))
         subtitle.set_xalign(0)
         subtitle.set_wrap(True)
         subtitle.add_css_class("mochi-pocket-subtitle")
@@ -250,7 +252,7 @@ class PocketWindow(Gtk.Window):
         self._error.set_visible(False)
         card.append(self._error)
 
-        self._empty = Gtk.Label(label=self.EMPTY_TEXT)
+        self._empty = Gtk.Label(label=tr(self.EMPTY_TEXT))
         self._empty.set_wrap(True)
         self._empty.set_justify(Gtk.Justification.CENTER)
         self._empty.set_vexpand(True)
@@ -317,14 +319,14 @@ class PocketWindow(Gtk.Window):
             self._clear_error()
             return True
         if not item_is_available(item):
-            self._show_error("That item is no longer available.")
+            self._show_error(tr("That item is no longer available."))
             return False
 
         uri = item.value if item.kind is PocketItemKind.URL else Path(item.value).as_uri()
         try:
             self._launcher(uri)
         except (GLib.Error, OSError, ValueError) as error:
-            self._show_error(f"Mochi couldn't open that item: {error}")
+            self._show_error(trf("Mochi couldn't open that item: {error}", error=error))
             return False
         self._clear_error()
         return True
@@ -334,21 +336,21 @@ class PocketWindow(Gtk.Window):
         if item is None or item.kind is not PocketItemKind.LOCAL_FILE:
             return False
         if not item_is_available(item):
-            self._show_error("That item is no longer available.")
+            self._show_error(tr("That item is no longer available."))
             return False
 
         folder_uri = Path(item.value).parent.as_uri()
         try:
             self._launcher(folder_uri)
         except (GLib.Error, OSError, ValueError) as error:
-            self._show_error(f"Mochi couldn't open that folder: {error}")
+            self._show_error(trf("Mochi couldn't open that folder: {error}", error=error))
             return False
         self._clear_error()
         return True
 
     def remove_item(self, item_id: str) -> bool:
         if not self._controller.remove(item_id):
-            self._show_error("Mochi couldn't remove that item.")
+            self._show_error(tr("Mochi couldn't remove that item."))
             return False
         self._clear_error()
         self._sync_rows_if_needed()
@@ -377,7 +379,7 @@ class PocketWindow(Gtk.Window):
         if not accepted:
             return
         if not self._controller.clear_all():
-            self._show_error("Mochi couldn't clear Pocket.")
+            self._show_error(tr("Mochi couldn't clear Pocket."))
             return
 
         self._close_detail_windows()
@@ -432,7 +434,7 @@ class PocketWindow(Gtk.Window):
         folder_button: Gtk.Button | None = None
         if item.kind is PocketItemKind.LOCAL_FILE:
             folder_button = Gtk.Button.new_from_icon_name("folder-open-symbolic")
-            folder_button.set_tooltip_text("Open containing folder")
+            folder_button.set_tooltip_text(tr("Open containing folder"))
             folder_button.set_sensitive(model.available)
             folder_button.connect(
                 "clicked",
@@ -441,7 +443,7 @@ class PocketWindow(Gtk.Window):
             row.append(folder_button)
 
         remove_button = Gtk.Button.new_from_icon_name("user-trash-symbolic")
-        remove_button.set_tooltip_text("Remove from Pocket")
+        remove_button.set_tooltip_text(tr("Remove from Pocket"))
         remove_button.connect("clicked", lambda _button: self.remove_item(item.id))
         row.append(remove_button)
         return PocketRowWidgets(

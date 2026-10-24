@@ -373,6 +373,18 @@ If `~/.local/bin` is not on `PATH`, use `~/.local/bin/mochi`.
 
 Global shortcuts require the GNOME helper.
 
+### Language
+
+Mochi speaks French by default: menus, windows, and dialogue. Set
+`MOCHI_LANG=en` to launch the original English copy instead:
+
+```bash
+MOCHI_LANG=en mochi
+```
+
+The English source strings double as translation keys, so both languages ship
+in the same local package with no extra dependency or network access.
+
 ---
 
 ## Compatibility

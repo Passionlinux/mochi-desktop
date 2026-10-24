@@ -13,11 +13,25 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
+from mochi.i18n import tr, trf
+
 from .model import InstalledBuild, UpdateTarget
 from .worker import UpdateProgress, UpdateStage
 
 
 MOCHI_GREEN = "#79c98b"
+
+
+def _translate_message(message: str) -> str:
+    """Translate the summary of a progress message and keep its details.
+
+    Update failures append raw command output after a blank line. Only the
+    human-written summary is part of the catalogue; the captured output stays
+    verbatim so maintainers can read the actual error.
+    """
+    summary, separator, details = message.partition("\n\n")
+    return tr(summary) + (separator + details if separator else "")
+
 
 UPDATE_WINDOW_CSS = f"""
 window.mochi-update-window {{
@@ -274,7 +288,7 @@ class UpdateWindow(Gtk.Window):
         on_cancel: Callable[[], None] | None = None,
         asset_root: Path | None = None,
     ) -> None:
-        super().__init__(title="Mochi Update")
+        super().__init__(title=tr("Mochi Update"))
         self.set_default_size(460, 520)
         self.set_resizable(False)
         self.add_css_class("mochi-update-window")
@@ -374,8 +388,8 @@ class UpdateWindow(Gtk.Window):
         target: UpdateTarget,
     ) -> None:
         self.state_name = "available"
-        self.title_text = "A new Mochi update!"
-        self.body_text = "Mochi learned some new things and would love to update."
+        self.title_text = tr("A new Mochi update!")
+        self.body_text = tr("Mochi learned some new things and would love to update.")
         installed_version = installed.version if installed is not None else "unknown"
         installed_commit = (
             installed.commit[:7]
@@ -383,8 +397,14 @@ class UpdateWindow(Gtk.Window):
             else "unknown"
         )
         self.version_text = (
-            f"Installed  {installed_version} ({installed_commit})\n"
-            f"Available  {target.metadata.version} ({target.commit[:7]})"
+            trf(
+                "Installed  {installed} ({installed_commit})\n"
+                "Available  {available} ({available_commit})",
+                installed=installed_version,
+                installed_commit=installed_commit,
+                available=target.metadata.version,
+                available_commit=target.commit[:7],
+            )
         )
         self.highlight_texts = tuple(target.metadata.highlights[:3])
         self.details_text = ""
@@ -402,15 +422,15 @@ class UpdateWindow(Gtk.Window):
         self._details_label.set_text("")
         self._set_actions(
             (
-                ("Later", self._on_later, False),
-                ("Update & Restart", self._on_update_restart, True),
+                (tr("Later"), self._on_later, False),
+                (tr("Update & Restart"), self._on_update_restart, True),
             )
         )
 
     def show_progress(self, progress: UpdateProgress) -> None:
         self.state_name = progress.stage.value
         self.title_text = self._progress_title(progress.stage)
-        self.body_text = progress.message
+        self.body_text = _translate_message(progress.message)
         self.highlight_texts = ()
         self.details_text = ""
 
@@ -447,17 +467,17 @@ class UpdateWindow(Gtk.Window):
                 UpdateStage.VERIFYING,
             }
         ):
-            self._set_actions((("Cancel", self._on_cancel, False),))
+            self._set_actions(((tr("Cancel"), self._on_cancel, False),))
         else:
             self._set_actions(())
 
     def show_failure(self, message: str, details: str) -> None:
         self.state_name = "failure"
-        self.title_text = "Hmm... something went wrong."
+        self.title_text = tr("Hmm... something went wrong.")
         self.body_text = (
-            f"{message}\n\nYour current Mochi is still safe."
-            if message and message != self.title_text
-            else "Your current Mochi is still safe."
+            f"{_translate_message(message)}\n\n{tr('Your current Mochi is still safe.')}"
+            if message and message != "Hmm... something went wrong."
+            else tr("Your current Mochi is still safe.")
         )
         self.version_text = ""
         self.highlight_texts = ()
@@ -477,16 +497,16 @@ class UpdateWindow(Gtk.Window):
         self._details.set_reveal_child(False)
         self._set_actions(
             (
-                ("Try Again", self._on_retry, True),
-                ("Close", self._on_close, False),
-                ("Show Details", self._toggle_details, False),
+                (tr("Try Again"), self._on_retry, True),
+                (tr("Close"), self._on_close, False),
+                (tr("Show Details"), self._toggle_details, False),
             )
         )
 
     def show_success(self) -> None:
         self.state_name = "success"
-        self.title_text = "All updated!"
-        self.body_text = "Mochi is ready to come back. 🌱"
+        self.title_text = tr("All updated!")
+        self.body_text = tr("Mochi is ready to come back. 🌱")
         self.version_text = ""
         self.highlight_texts = ()
         self.details_text = ""
@@ -511,7 +531,7 @@ class UpdateWindow(Gtk.Window):
             return
 
         self._highlights.set_visible(True)
-        heading = Gtk.Label(label="What’s new")
+        heading = Gtk.Label(label=tr("What’s new"))
         heading.set_xalign(0.0)
         heading.add_css_class("mochi-update-title")
         self._highlights.append(heading)
@@ -552,24 +572,24 @@ class UpdateWindow(Gtk.Window):
     @staticmethod
     def _progress_title(stage: UpdateStage) -> str:
         if stage is UpdateStage.DOWNLOADING:
-            return "Getting the newest Mochi…"
+            return tr("Getting the newest Mochi…")
         if stage in {UpdateStage.INSTALLING, UpdateStage.SWAPPING, UpdateStage.REFRESHING}:
-            return "Setting things up…"
+            return tr("Setting things up…")
         if stage is UpdateStage.RESTARTING:
-            return "Almost done…"
+            return tr("Almost done…")
         if stage is UpdateStage.SUCCESS:
-            return "All updated!"
-        return "Mochi Update"
+            return tr("All updated!")
+        return tr("Mochi Update")
 
     @staticmethod
     def _stage_text(active: UpdateStage) -> str:
         stages = (
-            (UpdateStage.DOWNLOADING, "Downloaded update"),
-            (UpdateStage.VERIFYING, "Verified files"),
-            (UpdateStage.INSTALLING, "Installing Mochi"),
-            (UpdateStage.SWAPPING, "Switching runtime"),
-            (UpdateStage.REFRESHING, "Refreshing desktop integration"),
-            (UpdateStage.RESTARTING, "Restarting Mochi"),
+            (UpdateStage.DOWNLOADING, tr("Downloaded update")),
+            (UpdateStage.VERIFYING, tr("Verified files")),
+            (UpdateStage.INSTALLING, tr("Installing Mochi")),
+            (UpdateStage.SWAPPING, tr("Switching runtime")),
+            (UpdateStage.REFRESHING, tr("Refreshing desktop integration")),
+            (UpdateStage.RESTARTING, tr("Restarting Mochi")),
         )
         active_index = next(
             (index for index, (stage, _label) in enumerate(stages) if stage is active),

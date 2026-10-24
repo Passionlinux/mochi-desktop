@@ -57,6 +57,8 @@ Use this checklist for interaction/state changes and before release checkpoints.
 - [ ] Bond progress and Focus bond hints still outrank the nameplate
 - [ ] Nameplate remains non-targetable and does not interfere with click/drag/right-click
 - [ ] Repeated hover/speech cycles do not leave the nameplate stuck visible or transparent
+- [ ] Every ordinary bubble still goes through the single speech funnel, so French copy cannot be bypassed by a new caller
+- [ ] `MOCHI_LANG=en` restores the original English copy for menus, windows, and dialogue
 
 ## Timers / Long-running Sources
 
@@ -244,6 +246,7 @@ Fresh Fedora GNOME/Wayland/XWayland QA:
 - [ ] GNOME helper refresh notice remains informative and non-blocking
 - [ ] Updated Mochi relaunches from the updater and from the GNOME app grid
 - [ ] `mochi-update` and in-app updating use the same exact-target transaction path
+- [ ] The bootstrap workspace still imports without the rest of Mochi after copying the small translation catalogue
 
 ## Release Gate
 

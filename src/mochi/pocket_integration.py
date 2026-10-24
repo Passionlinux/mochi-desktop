@@ -11,6 +11,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk
 
+from mochi.i18n import tr
 from mochi.pocket import PocketItem
 from mochi.pocket_controller import PocketController
 from mochi.pocket_drop import PocketDropAdapter

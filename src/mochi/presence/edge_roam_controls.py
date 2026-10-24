@@ -8,6 +8,7 @@ from gi.repository import Gtk
 
 from mochi.behavior import choose_walk_animation
 from mochi.edge_roam import build_edge_roam_motion
+from mochi.i18n import tr
 from mochi.sprites import ANIMATIONS
 from mochi.state import MochiState
 
@@ -44,14 +45,14 @@ class EdgeRoamMixin:
     def _make_edge_roam_row(self) -> tuple[Gtk.Button, Gtk.Switch]:
         button = Gtk.Button()
         button.add_css_class("mochi-menu-row")
-        button.set_tooltip_text("Keep Mochi's autonomous wandering along the screen edge")
+        button.set_tooltip_text(tr("Keep Mochi's autonomous wandering along the screen edge"))
 
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         icon = Gtk.Image.new_from_icon_name("view-fullscreen-symbolic")
         icon.add_css_class("mochi-menu-icon")
         row.append(icon)
 
-        text = Gtk.Label(label="Edge roam")
+        text = Gtk.Label(label=tr("Edge roam"))
         text.set_xalign(0)
         text.set_hexpand(True)
         row.append(text)

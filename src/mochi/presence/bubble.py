@@ -13,6 +13,7 @@ gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
+from mochi.i18n import tr
 from mochi.x11 import get_window_position, move_window, request_keep_above
 
 
@@ -149,7 +150,7 @@ class SpeechBubble:
         # Rich introductory text is revealed immediately; ordinary speech
         # retains its typing beat. Markup is supplied only by trusted app copy.
         typing_preview = markup is None and bool(getattr(text, "typing_preview", False))
-        final_text = str(text).strip()
+        final_text = tr(str(text).strip())
         if self.visible or not final_text:
             return False
 
@@ -158,7 +159,7 @@ class SpeechBubble:
             self._pending_text = final_text
             self._pending_duration_seconds = duration_seconds
             self._typing_step = 0
-            self._set_text("Mochi is typing", typing=True)
+            self._set_text(tr("Mochi is typing"), typing=True)
         else:
             self._set_text(final_text, typing=False, markup=markup)
 
@@ -242,7 +243,7 @@ class SpeechBubble:
 
         self._typing_step += 1
         self._set_text(
-            "Mochi is typing" + " ." * min(3, self._typing_step),
+            tr("Mochi is typing") + " ." * min(3, self._typing_step),
             typing=True,
         )
         if self._typing_step < 3:

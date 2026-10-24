@@ -11,6 +11,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 from gi.repository import Gdk, Gtk  # noqa: E402
 
+from mochi.i18n import tr
+
 
 @dataclass(frozen=True)
 class QuickStartSection:
@@ -171,7 +173,7 @@ class QuickStartWindow:
         self._logger = logger or logging.getLogger(__name__)
 
         self.window = Gtk.Window()
-        self.window.set_title("Getting to know Mochi 🌱")
+        self.window.set_title(tr("Getting to know Mochi 🌱"))
         self.window.set_transient_for(owner)
         self.window.set_destroy_with_parent(True)
         self.window.set_modal(False)
@@ -200,19 +202,19 @@ class QuickStartWindow:
         root.set_margin_end(20)
 
         hero = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        kicker = Gtk.Label(label="QUICK START")
+        kicker = Gtk.Label(label=tr("QUICK START"))
         kicker.set_xalign(0)
         kicker.add_css_class("mochi-quick-start-kicker")
         hero.append(kicker)
 
-        title = Gtk.Label(label="Getting to know Mochi")
+        title = Gtk.Label(label=tr("Getting to know Mochi"))
         title.set_xalign(0)
         title.set_wrap(True)
         title.add_css_class("mochi-quick-start-title")
         hero.append(title)
 
         subtitle = Gtk.Label(
-            label="A tiny guide to the tiny creature living on your desktop."
+            label=tr("A tiny guide to the tiny creature living on your desktop.")
         )
         subtitle.set_xalign(0)
         subtitle.set_wrap(True)
@@ -235,14 +237,14 @@ class QuickStartWindow:
         root.append(scroller)
 
         footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        footer_text = Gtk.Label(label=QUICK_START_FOOTER)
+        footer_text = Gtk.Label(label=tr(QUICK_START_FOOTER))
         footer_text.set_xalign(0)
         footer_text.set_wrap(True)
         footer_text.set_hexpand(True)
         footer_text.add_css_class("mochi-quick-start-footer")
         footer.append(footer_text)
 
-        close_button = Gtk.Button(label="Close")
+        close_button = Gtk.Button(label=tr("Close"))
         close_button.set_valign(Gtk.Align.CENTER)
         close_button.add_css_class("mochi-quick-start-close")
         close_button.connect("clicked", self._on_close_clicked)
@@ -266,12 +268,12 @@ class QuickStartWindow:
         card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         card.add_css_class("mochi-quick-start-card")
 
-        title = Gtk.Label(label=section.title)
+        title = Gtk.Label(label=tr(section.title))
         title.set_xalign(0)
         title.add_css_class("mochi-quick-start-section-title")
         card.append(title)
 
-        body = Gtk.Label(label=section.body)
+        body = Gtk.Label(label=tr(section.body))
         body.set_xalign(0)
         body.set_wrap(True)
         body.set_max_width_chars(62)
@@ -287,7 +289,7 @@ class QuickStartWindow:
             dot.add_css_class("mochi-quick-start-dot")
             row.append(dot)
 
-            bullet = Gtk.Label(label=bullet_text)
+            bullet = Gtk.Label(label=tr(bullet_text))
             bullet.set_xalign(0)
             bullet.set_wrap(True)
             bullet.set_hexpand(True)
@@ -335,14 +337,14 @@ class QuickStartMixin:
     def _make_quick_start_menu_button(self) -> Gtk.Button:
         button = Gtk.Button()
         button.add_css_class("mochi-menu-row")
-        button.set_tooltip_text("A quick introduction to Mochi")
+        button.set_tooltip_text(tr("A quick introduction to Mochi"))
 
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         badge = Gtk.Label(label="?")
         badge.set_width_chars(2)
         row.append(badge)
 
-        text = Gtk.Label(label="What can Mochi do?")
+        text = Gtk.Label(label=tr("What can Mochi do?"))
         text.set_xalign(0)
         text.set_hexpand(True)
         row.append(text)

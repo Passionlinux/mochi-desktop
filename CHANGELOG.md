@@ -19,6 +19,14 @@ Mochi is still in early public alpha, so behavior, configuration, and compatibil
   files, commands, or its replies, and Mochi makes no network requests. See
   [Agent Companion](docs/agent-companion.md) for setup.
 
+### Changed
+
+- Mochi's interface and dialogue are now in French by default, including the
+  right-click menu, Mochi Lab, Focus, Pocket, the Emote Catalogue, Quick Start,
+  and the updater. The English source strings remain the translation keys, so
+  launching with `MOCHI_LANG=en` restores the original English copy. No new
+  runtime dependency and no network access are involved.
+
 ## 0.4.1 — Stabilization & Portability
 
 Mochi notices where your attention goes, and stays animated and updatable

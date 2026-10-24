@@ -6,6 +6,7 @@ import time
 
 from gi.repository import GLib, Gtk
 
+from mochi.i18n import tr
 from mochi.buddy import Buddy
 from mochi.sprites import ANIMATIONS
 from mochi.state import MochiState
@@ -14,7 +15,7 @@ from mochi.x11_buddy import X11Buddy
 from .bubble import SpeechBubble
 from .context import AmbientContext
 from .engine import PresenceEngine, PresenceTuning, SpeechText, speech_display_seconds
-from .phrases import INTRO_MARKUP
+from .phrases import intro_markup
 from .signals import AppCategorySignalAdapter, SystemSignalMonitor
 from .session import SessionSignalMonitor
 
@@ -131,14 +132,14 @@ class PresenceBuddyMixin:
     def _make_stay_put_row(self) -> tuple[Gtk.Button, Gtk.Switch]:
         button = Gtk.Button()
         button.add_css_class("mochi-menu-row")
-        button.set_tooltip_text("Prevent Mochi from wandering on his own")
+        button.set_tooltip_text(tr("Prevent Mochi from wandering on his own"))
 
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         icon = Gtk.Image.new_from_icon_name("media-playback-pause-symbolic")
         icon.add_css_class("mochi-menu-icon")
         row.append(icon)
 
-        text = Gtk.Label(label="Stay put")
+        text = Gtk.Label(label=tr("Stay put"))
         text.set_xalign(0)
         text.set_hexpand(True)
         row.append(text)
@@ -189,13 +190,13 @@ class PresenceBuddyMixin:
 
         card.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
 
-        presence_label = Gtk.Label(label="AmbiSense")
+        presence_label = Gtk.Label(label=tr("AmbiSense"))
         presence_label.set_xalign(0)
         presence_label.add_css_class("mochi-menu-section")
         card.append(presence_label)
 
         speech_row = self._make_presence_switch_row(
-            "Speech bubbles",
+            tr("Speech bubbles"),
             self._ambient_presence_engine.tuning.speech_enabled,
             self._change_presence_speech_enabled,
         )
@@ -203,7 +204,7 @@ class PresenceBuddyMixin:
         animated_rows.append(speech_row)
 
         reactions_row = self._make_presence_switch_row(
-            "Ambient reactions",
+            tr("Ambient reactions"),
             self._ambient_presence_engine.tuning.ambient_reactions_enabled,
             self._change_presence_reactions_enabled,
         )
@@ -211,7 +212,7 @@ class PresenceBuddyMixin:
         animated_rows.append(reactions_row)
 
         quiet_row = self._make_presence_switch_row(
-            "Quiet mode",
+            tr("Quiet mode"),
             self._ambient_presence_engine.tuning.quiet_mode,
             self._change_presence_quiet_mode,
         )
@@ -225,7 +226,7 @@ class PresenceBuddyMixin:
         animated_rows.append(chatty_row)
 
         ambient_button, _ = self._make_menu_button(
-            "Say something now",
+            tr("Say something now"),
             "dialog-information-symbolic",
             self._test_presence_ambient,
         )
@@ -233,7 +234,7 @@ class PresenceBuddyMixin:
         animated_rows.append(ambient_button)
 
         contextual_button, _ = self._make_menu_button(
-            "Say something contextual",
+            tr("Say something contextual"),
             "system-run-symbolic",
             self._test_presence_contextual,
         )
@@ -242,12 +243,19 @@ class PresenceBuddyMixin:
             spacing=10,
         )
         context_preview_row.add_css_class("mochi-setting-row")
-        context_preview_label = Gtk.Label(label="Context preview")
+        context_preview_label = Gtk.Label(label=tr("Context preview"))
         context_preview_label.set_xalign(0)
         context_preview_label.set_hexpand(True)
         context_preview_row.append(context_preview_label)
         self._presence_context_preview_selector = Gtk.DropDown.new_from_strings(
-            ("Current app", "Browser", "VS Code", "Terminal", "Editor", "Pixel art")
+            (
+                tr("Current app"),
+                tr("Browser"),
+                tr("VS Code"),
+                tr("Terminal"),
+                tr("Editor"),
+                tr("Pixel art"),
+            )
         )
         context_preview_row.append(self._presence_context_preview_selector)
         card.append(context_preview_row)
@@ -256,7 +264,7 @@ class PresenceBuddyMixin:
         animated_rows.append(contextual_button)
 
         typing_button, _ = self._make_menu_button(
-            "Preview typing phrase",
+            tr("Preview typing phrase"),
             "input-keyboard-symbolic",
             self._test_presence_typing,
         )
@@ -270,7 +278,7 @@ class PresenceBuddyMixin:
         # a conventional resizable window with a bounded viewport and scrolling.
         popover.window.set_decorated(True)
         popover.window.set_resizable(True)
-        popover.window.set_title("Mochi Lab")
+        popover.window.set_title(tr("Mochi Lab"))
         popover._preferred_width = 560
         popover._preferred_height = 620
         popover.window.set_default_size(560, 620)
@@ -311,11 +319,11 @@ class PresenceBuddyMixin:
         button = Gtk.Button()
         button.add_css_class("mochi-menu-row")
         button.set_tooltip_text(
-            "Stress-test AmbiSense with much faster ambient speech"
+            tr("Stress-test AmbiSense with much faster ambient speech")
         )
 
         row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        text = Gtk.Label(label="Extra chatty")
+        text = Gtk.Label(label=tr("Extra chatty"))
         text.set_xalign(0)
         text.set_hexpand(True)
         row.append(text)
@@ -836,7 +844,7 @@ class PresenceBuddyMixin:
         return True
 
     def _show_presence_action(self, action) -> bool:
-        options = {"markup": INTRO_MARKUP} if action.event == "intro" else {}
+        options = {"markup": intro_markup()} if action.event == "intro" else {}
         shown = self._presence_bubble.show(
             action.text, duration_seconds=action.display_seconds, **options,
         )

@@ -9,6 +9,7 @@ from html import escape
 import random
 
 from mochi.care import BondPhase, BondState, bond_phase_for_level
+from mochi.i18n import tr
 
 
 INTRO_LINES = (
@@ -18,10 +19,15 @@ INTRO_LINES = (
     "I’ll try not to get in the way. ♡",
 )
 INTRO_TEXT = "\n".join(INTRO_LINES)
-INTRO_MARKUP = "\n".join(
-    f"<b>{escape(line)}</b>" if index in (0, 2) else escape(line)
-    for index, line in enumerate(INTRO_LINES)
-)
+
+
+def intro_markup() -> str:
+    """Build the rich introduction in the currently selected language."""
+    lines = tuple(tr(line) for line in INTRO_LINES)
+    return "\n".join(
+        f"<b>{escape(line)}</b>" if index in (0, 2) else escape(line)
+        for index, line in enumerate(lines)
+    )
 
 
 @dataclass(frozen=True, slots=True)
